@@ -21,6 +21,12 @@ interface PlayerParams {
     playerId: string;
 }
 
+interface PlayTurnBody {
+    gameId: string;
+    playerId: string;
+    cardId: string;
+}
+
 export class GameController {
     static createGame(
         req: Request,
@@ -134,13 +140,52 @@ export class GameController {
         res: Response
     ) {
         try {
-            const hand =GameService.getPlayerHand(req.params.gameId,req.params.playerId);
+            const hand = GameService.getPlayerHand(req.params.gameId, req.params.playerId);
             return res.json({
                 success: true,
                 data: hand
             });
         } catch (error: any) {
             return res.status(404).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    static getView(
+        req: Request<GameParams>,
+        res: Response
+    ) {
+        try {
+            return res.json({
+                success: true,
+                data:GameService.getView(req.params.gameId)
+            });
+        } catch (error: any) {
+            return res.status(400).json({
+                    success: false,
+                    message: error.message
+                });
+        }
+    }
+
+    static playTurn(
+        req: Request<{}, {}, PlayTurnBody>,
+        res: Response
+    ) {
+        try {
+            const result = GameService.playTurn(
+                req.body.gameId,
+                req.body.playerId,
+                req.body.cardId
+            );
+            return res.json({
+                success: true,
+                data: result
+            });
+        } catch (error: any) {
+            return res.status(400).json({
                 success: false,
                 message: error.message
             });

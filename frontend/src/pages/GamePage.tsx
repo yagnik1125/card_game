@@ -1,81 +1,90 @@
 import {
     useEffect,
-    useState,
 } from "react";
 
 import {
+    useDispatch,
+    useSelector,
+} from "react-redux";
+import {
     useParams,
 } from "react-router-dom";
-
 import {
-    getGame,
-    playCard,
-} from "../api/gameApi";
-
-import PlayerHand from "../components/PlayerHand";
+    getView,
+    playTurn,
+} from "@/api/gameApi";
+import {
+    type RootState,
+} from "@/store/store";
+import {
+    setSnapshot,
+    setAnimating,
+    setTrickCards,
+    setWinner,
+} from "@/store/slices/gameSlice";
+import GameBoard
+    from "@/components/GameBoard";
 
 export default function GamePage() {
-    const { gameId } =
-        useParams();
-
-    const [game, setGame] =
-        useState<any>(null);
-
-    const loadGame =
-        async () => {
-            if (!gameId) return;
-
-            const result =
-                await getGame(gameId);
-
-            setGame(result.data);
-        };
-
+    const dispatch = useDispatch();
+    const { gameId } = useParams();
+    const snapshot = useSelector(
+        (state: RootState) => state.game.snapshot
+    );
+    const load = async () => {
+        if (!gameId) return;
+        const view = await getView(gameId);
+        dispatch(setSnapshot(view));
+    };
     useEffect(() => {
-        loadGame();
+        load();
     }, []);
 
     const handlePlay =
-        async (
-            cardId: string
-        ) => {
+        async (cardId: string) => {
             if (!gameId) return;
-
-            await playCard(
-                gameId,
-                "P1",
-                cardId
+            dispatch(
+                setAnimating(true)
             );
-
-            await loadGame();
+            const result = await playTurn(gameId, "P1", cardId);
+            let cards: any[] = [];
+            for (const event of result.events) {
+                cards = [...cards, event];
+                dispatch(
+                    setTrickCards(cards)
+                );
+                await new Promise(r => setTimeout(r, 700));
+            }
+            dispatch(
+                setSnapshot(
+                    result.snapshot
+                )
+            );
+            dispatch(
+                setTrickCards([])
+            );
+            dispatch(
+                setAnimating(false)
+            );
+            if (result.snapshot.completed) {
+                dispatch(
+                    setWinner(
+                        result.snapshot
+                    )
+                );
+            }
         };
 
-    if (!game) {
-        return <div>Loading...</div>;
+    if (!snapshot) {
+        return <div>
+            Loading...
+        </div>
     }
 
-    const player =
-        game.match.players.find(
-            (p: any) =>
-                p.id === "P1"
-        );
-
     return (
-        <div>
-            <h2>
-                Game:
-                {" "}
-                {game.gameId}
-            </h2>
-
-            <h3>
-                Your Hand
-            </h3>
-
-            <PlayerHand
-                cards={player.hand}
-                onPlay={handlePlay}
-            />
-        </div>
-    );
+        <GameBoard
+            snapshot={snapshot}
+            onPlay={handlePlay}
+        />
+    )
 }

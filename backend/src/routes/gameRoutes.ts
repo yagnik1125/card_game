@@ -33,6 +33,16 @@ router.get(
     GameController.getPlayerHand
 );
 
+router.get(
+    "/:gameId/view",
+    GameController.getView
+);
+
+router.post(
+    "/play-turn",
+    GameController.playTurn
+);
+
 router.post(
     "/play-card",
     GameController.playCard
