@@ -1,0 +1,20 @@
+import { SessionStore } from "../session/SessionStore";
+import { GameSession } from "../session/GameSession";
+
+export class SessionManager {
+    static create(session: GameSession): void {
+        SessionStore.create(session);
+    }
+    static get(gameId: string): GameSession {
+        const session = SessionStore.get(gameId);
+        if (!session) {
+            throw new Error(
+                "Game session not found"
+            );
+        }
+        return session;
+    }
+    static remove(gameId: string): void {
+        SessionStore.remove(gameId);
+    }
+}

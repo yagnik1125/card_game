@@ -1,0 +1,80 @@
+import { TrickFactory } from "../factories/TrickFactory";
+import { WinnerResolver } from "../rules/WinnerResolver";
+import { GameSession } from "../session/GameSession";
+import { RoundLifecycleService } from "./RoundLifecycleService";
+
+export class GameFlowService {
+    static process(session: GameSession) {
+        if (!session.gameState) {
+            return;
+        }
+        this.processTrick(session);
+        this.processRound(session);
+        this.processMatch(session);
+    }
+    private static processTrick(session: GameSession) {
+        const state = session.gameState!;
+        const trick = state.currentTrick;
+        if (trick.plays.length < session.match.players.length) {
+            return;
+        }
+        const winner = WinnerResolver.resolve(trick, state.currentRound.state);
+        trick.winnerPlayerId = winner.playerId;
+        const winnerPlayer = session.match.players.find(p => p.id === winner.playerId)!;
+        winnerPlayer.stats.tricksWonThisRound++;
+        winnerPlayer.stats.totalTricksWon++;
+        state.leaderPlayerId = winnerPlayer.id;
+        if (!state.currentRound.tricks.some(t => t.id === trick.id)) {
+            state.currentRound.tricks.push(trick);
+        }
+        if (winnerPlayer.hand.length === 0) {
+            return;
+        }
+        state.currentTrick = TrickFactory.create(trick.trickNumber + 1);
+        state.turnState.currentPlayerId = winnerPlayer.id;
+        state.turnState.turnNumber = 1;
+    }
+    private static processRound(session: GameSession) {
+        const players = session.match.players;
+        const roundFinished = players.every(p => p.hand.length === 0);
+        if (!roundFinished) {
+            return;
+        }
+        const winner = players.reduce(
+            (best, current) => current.stats.tricksWonThisRound > best.stats.tricksWonThisRound ? current : best
+        );
+        session.gameState!.currentRound.winnerPlayerId = winner.id;
+        session.match.rounds.push(session.gameState!.currentRound);
+        session.match.state.championPlayerId = winner.id;
+        if (session.match.state.currentRound >= session.match.state.totalRounds) {
+            return;
+        }
+        session.match.state.currentRound++;
+        const nextRoundNumber = session.match.state.currentRound;
+        const { round, firstTrick } = RoundLifecycleService.startRound(players, nextRoundNumber, winner.id);
+        session.gameState!.currentRound = round;
+        session.gameState!.currentTrick = firstTrick;
+        session.gameState!.leaderPlayerId = winner.id;
+        session.gameState!.turnState = {
+            currentPlayerId: winner.id,
+            turnNumber: 1
+        };
+    }
+    private static processMatch(session: GameSession) {
+        const matchEnded =
+            session.match.state.currentRound === session.match.state.totalRounds
+            && session.match.players.every(p => p.hand.length === 0);
+        if (!matchEnded) {
+            return;
+        }
+        const winner = session.match.players.reduce(
+            (best, current) => current.stats.totalTricksWon > best.stats.totalTricksWon ? current : best
+        );
+        session.match.result = {
+            winnerPlayerId: winner.id,
+            totalTricksWon: winner.stats.totalTricksWon
+        };
+        session.match.state.isCompleted = true;
+        session.gameState!.completed = true;
+    }
+}

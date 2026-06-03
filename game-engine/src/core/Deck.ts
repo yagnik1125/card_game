@@ -1,5 +1,5 @@
 import { Card } from "./Card";
-import { Rank, Suit } from "../types/enums";
+import { Rank, Suit } from "./enums";
 
 export class Deck {
   cards: Card[] = [];
@@ -8,46 +8,31 @@ export class Deck {
     this.build();
   }
 
-  private build() {
+  private build(): void {
     const suits = Object.values(Suit);
 
-    const ranks = [
-      Rank.TWO,
-      Rank.THREE,
-      Rank.FOUR,
-      Rank.FIVE,
-      Rank.SIX,
-      Rank.SEVEN,
-      Rank.EIGHT,
-      Rank.NINE,
-      Rank.TEN,
-      Rank.JACK,
-      Rank.QUEEN,
-      Rank.KING,
-      Rank.ACE,
-    ];
+    const ranks = Object.values(Rank).filter(value => typeof value === "number");
 
-    let id = 1;
+    let id: number = 1;
 
     for (const suit of suits) {
       for (const rank of ranks) {
         this.cards.push({
           id: String(id++),
           suit,
-          rank,
+          rank: rank as Rank,
         });
       }
     }
   }
 
-  shuffle() {
+  shuffle(): void {
     for (let i = this.cards.length - 1; i > 0; i--) {
       const j = Math.floor(
         Math.random() * (i + 1)
       );
 
-      [this.cards[i], this.cards[j]] =
-        [this.cards[j], this.cards[i]];
+      [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
     }
   }
 

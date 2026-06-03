@@ -1,5 +1,5 @@
 import { Card } from "../core/Card";
-import { Suit } from "../types/enums";
+import { Suit } from "../core/enums";
 
 export class BotUtils {
     static strongestSuit(
@@ -13,7 +13,12 @@ export class BotUtils {
                 + card.rank
             );
         }
-        let bestSuit =cards[0].suit;
+        if (!cards.length) {
+            throw new Error(
+                "No cards supplied"
+            );
+        }
+        let bestSuit = cards[0].suit;
         let bestScore = 0;
         for (const [suit, score] of counts) {
             if (score > bestScore) {

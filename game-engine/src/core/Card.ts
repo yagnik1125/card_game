@@ -1,4 +1,4 @@
-import { Rank, Suit } from "../types/enums";
+import { Rank, Suit } from "./enums";
 
 export interface Card {
   id: string;
