@@ -47,6 +47,8 @@ export default function HomePage() {
                         px-6
                         py-3
                         rounded
+                        w-full
+                        cursor-pointer
                     "
                 >
                     Create Game

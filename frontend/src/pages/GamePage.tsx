@@ -1,5 +1,6 @@
 import {
     useEffect,
+    useRef,
 } from "react";
 
 import {
@@ -22,8 +23,8 @@ import {
     setTrickCards,
     setWinner,
 } from "@/store/slices/gameSlice";
-import GameBoard
-    from "@/components/GameBoard";
+import GameBoard from "@/components/GameBoard";
+import WinnerModal from "@/components/WinnerModal";
 
 export default function GamePage() {
     const dispatch = useDispatch();
@@ -31,6 +32,10 @@ export default function GamePage() {
     const snapshot = useSelector(
         (state: RootState) => state.game.snapshot
     );
+    const winner = useSelector(
+        (state: RootState) => state.game.winner
+    );
+    const playingRef = useRef(false);
     const load = async () => {
         if (!gameId) return;
         const view = await getView(gameId);
@@ -38,42 +43,71 @@ export default function GamePage() {
     };
     useEffect(() => {
         load();
-    }, []);
+    }, [gameId]);
 
-    const handlePlay =
-        async (cardId: string) => {
-            if (!gameId) return;
-            dispatch(
-                setAnimating(true)
-            );
+    const handlePlay = async (cardId: string) => {
+        if (!gameId) {
+            return;
+        }
+        if (playingRef.current) {
+            return;
+        }
+        playingRef.current = true;
+        dispatch(
+            setAnimating(true)
+        );
+        try {
             const result = await playTurn(gameId, "P1", cardId);
             let cards: any[] = [];
             for (const event of result.events) {
-                cards = [...cards, event];
-                dispatch(
-                    setTrickCards(cards)
-                );
-                await new Promise(r => setTimeout(r, 700));
+                if (event.type === "CARD_PLAYED" || event.type === "BOT_PLAY") {
+                    cards = [
+                        ...cards,
+                        {
+                            playerId: event.playerId,
+                            suit: event.suit,
+                            rank: event.rank,
+                        }
+                    ];
+
+                    dispatch(
+                        setTrickCards(cards)
+                    );
+
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+
+                if (event.type === "TRICK_COMPLETED") {
+                    await new Promise(r => setTimeout(r, 1500));
+                    dispatch(
+                        setTrickCards([])
+                    );
+                }
             }
+
             dispatch(
-                setSnapshot(
-                    result.snapshot
-                )
+                setSnapshot(result.snapshot)
             );
-            dispatch(
-                setTrickCards([])
-            );
+
             dispatch(
                 setAnimating(false)
             );
+
             if (result.snapshot.completed) {
                 dispatch(
-                    setWinner(
-                        result.snapshot
-                    )
+                    setWinner(result.snapshot)
                 );
             }
-        };
+        } catch (error) {
+            console.error(error);
+            alert("Failed to play card");
+        } finally {
+            playingRef.current = false;
+            dispatch(
+                setAnimating(false)
+            );
+        }
+    };
 
     if (!snapshot) {
         return <div>
@@ -82,9 +116,15 @@ export default function GamePage() {
     }
 
     return (
-        <GameBoard
-            snapshot={snapshot}
-            onPlay={handlePlay}
-        />
+        <>
+            <GameBoard
+                snapshot={snapshot}
+                onPlay={handlePlay}
+            />
+
+            {winner && <WinnerModal
+                winner={winner}
+            />}
+        </>
     )
 }

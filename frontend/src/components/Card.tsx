@@ -1,149 +1,44 @@
-interface Props{
+import { suitMap, rankText } from "@/utils/constants";
 
-card:any;
-
-disabled?:boolean;
-
-onClick?:()=>void;
-
+interface Props {
+    card: any;
+    disabled?: boolean;
+    trumpSuit: string;
+    onClick?: () => void;
 }
 
-const suitColor={
- HEART:"text-red-600",
- DIAMOND:"text-red-600",
- CLUB:"text-black",
- SPADE:"text-black",
-};
+export default function Card({ card, disabled, trumpSuit, onClick }: Props) {
+    const red = card.suit === "HEARTS" || card.suit === "DIAMONDS";
 
-export default function Card({
+    return (
+        <button
+            disabled={disabled}
+            onClick={onClick}
+            className={`
+                w-16
+                h-24
+                rounded-xl
+                border
+                ${trumpSuit && card.suit === trumpSuit ? "bg-green-400" : "bg-white"}
+                shadow-xl
+                p-1
+                flex
+                flex-col
+                justify-between
+                ${disabled ? "opacity-40" : ""}
+            `}
+        >
+            <div className={`font-bold text-sm self-start ${red ? "text-red-600" : "text-black"}`}>
+                {rankText(card.rank)}
+            </div>
 
-card,
+            <div className={`text-5xl text-center ${red ? "text-red-600" : "text-black"}`}>
+                {suitMap[card.suit]}
+            </div>
 
-disabled,
-
-onClick,
-
-}:Props){
-
-return(
-
-<button
-
-disabled={disabled}
-
-onClick={onClick}
-
-className={`
-
-w-20
-h-32
-
-rounded-xl
-
-bg-white
-
-shadow-xl
-
-border-2
-
-flex
-
-flex-col
-
-justify-between
-
-p-2
-
-transition
-
-${disabled
-?"opacity-40"
-:"hover:-translate-y-4"
-}
-
-`}
-
->
-
-<div
-
-className={`
-font-bold
-${suitColor[
-card.suit as keyof typeof suitColor
-] || ""
-}
-`}
-
->
-
-{card.rank}
-
-</div>
-
-<div
-
-className={`
-text-3xl
-self-center
-${suitColor[
-card.suit as keyof typeof suitColor
-] || ""
-}
-`}
-
->
-
-{symbol(card.suit)}
-
-</div>
-
-<div
-
-className={`
-self-end
-font-bold
-${suitColor[
-card.suit as keyof typeof suitColor
-] || ""
-}
-`}
-
->
-
-{card.rank}
-
-</div>
-
-</button>
-
-)
-
-}
-
-function symbol(
-suit:string
-){
-
-switch(
-suit
-){
-
-case "HEART":
-return "♥";
-
-case "DIAMOND":
-return "♦";
-
-case "SPADE":
-return "♠";
-
-case "CLUB":
-return "♣";
-
-default:
-return suit;
-
-}
-
+            <div className={`font-bold text-sm self-end ${red ? "text-red-600" : "text-black"}`}>
+                {rankText(card.rank)}
+            </div>
+        </button>
+    );
 }

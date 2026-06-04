@@ -3,7 +3,6 @@ import { GameSessionManager } from "../session/GameSessionManager";
 import { MoveValidator } from "../rules/MoveValidator";
 import { TrickEngine } from "../engines/TrickEngine";
 import { GameFlowService } from "./GameFlowService";
-import { BotTurnService } from "./BotTurnService";
 
 export class PlayCardService {
     static playCard(
@@ -44,7 +43,6 @@ export class PlayCardService {
         player.stats.cardsPlayed++;
         this.moveToNextPlayer(session);
         GameFlowService.process(session);
-        BotTurnService.executeBots(session);
         GameSessionManager.save(session);
         return session;
     }

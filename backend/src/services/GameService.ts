@@ -7,6 +7,8 @@ import {
     PlayerFactory,
 } from "trump-and-twist-game-engine";
 import { GameStateMapper } from "./GameStateMapper";
+import { GameEvent } from "../types/GameEvent";
+import { PlayTurnResponse } from "../types/PlayTurnResponse";
 
 export class GameService {
     static createGame() {
@@ -135,34 +137,84 @@ export class GameService {
         gameId: string,
         playerId: string,
         cardId: string
-    ) {
+    ): PlayTurnResponse {
         const session = GameSessionManager.get(gameId);
         const player = session.match.players.find(p => p.id === playerId);
+
         if (!player) {
-            throw new Error(
-                "Player not found"
-            );
+            throw new Error("Player not found");
         }
+
+        if (!session.gameState) {
+            throw new Error("Game not initialized");
+        }
+
+        const legalCards = LegalMoveGenerator.getLegalCards(player, session.gameState.currentTrick);
+
+        const isLegal = legalCards.some(card => card.id === cardId);
+
+        if (!isLegal) {
+            throw new Error("Illegal move");
+        }
+
         const card = player.hand.find(c => c.id === cardId);
+
         if (!card) {
-            throw new Error(
-                "Card not found"
-            );
+            throw new Error("Card not found");
         }
-        const events: any[] = [];
+
+        const events: GameEvent[] = [];
+
+        const trickNumberBefore = session.gameState.currentTrick.trickNumber;
+
+        const roundNumberBefore = session.gameState.currentRound.state.roundNumber;
         PlayCardService.playCard(gameId, playerId, card);
+
         events.push({
-            type: "PLAYER_PLAY",
+            type: "CARD_PLAYED",
             playerId,
             cardId: card.id,
             suit: card.suit,
-            rank: card.rank,
+            rank: card.rank
         });
+
         const botEvents = BotTurnService.executeAllBots(session);
+
         events.push(...botEvents);
+
+        const updated = GameSessionManager.get(gameId);
+
+        const trickNumberAfter = updated.gameState?.currentTrick.trickNumber;
+
+        const roundNumberAfter = updated.gameState?.currentRound.state.roundNumber;
+
+        if (trickNumberAfter !== trickNumberBefore) {
+            events.push({
+                type: "TRICK_COMPLETED"
+            });
+        }
+
+        if (roundNumberAfter !== roundNumberBefore) {
+            events.push({
+                type: "ROUND_COMPLETED",
+                roundNumber: roundNumberAfter || 0
+            });
+        }
+
+        if (updated.gameState?.completed) {
+            events.push({
+                type: "MATCH_COMPLETED", winner: updated.match.result?.winnerPlayerId
+            });
+        }
+
+        events.push({
+            type: "TURN_CHANGED",
+            currentPlayerId: updated.gameState?.turnState.currentPlayerId || ""
+        });
+
         return {
             events,
-            snapshot: this.getView(gameId),
+            snapshot: this.getView(gameId)
         };
     }
 }
