@@ -35,6 +35,9 @@ export default function GamePage() {
     const winner = useSelector(
         (state: RootState) => state.game.winner
     );
+    const trickCards = useSelector(
+        (state: RootState) => state.game.trickCards
+    );
     const playingRef = useRef(false);
     const load = async () => {
         if (!gameId) return;
@@ -58,39 +61,33 @@ export default function GamePage() {
         );
         try {
             const result = await playTurn(gameId, "P1", cardId);
-            let cards: any[] = [];
+            let cards: any[] = [...trickCards];
             for (const event of result.events) {
                 if (event.type === "CARD_PLAYED" || event.type === "BOT_PLAY") {
-                    cards = [
-                        ...cards,
-                        {
-                            playerId: event.playerId,
-                            suit: event.suit,
-                            rank: event.rank,
-                        }
-                    ];
+                    cards.push({
+                        playerId: event.playerId,
+                        suit: event.suit,
+                        rank: event.rank,
+                    });
 
                     dispatch(
-                        setTrickCards(cards)
+                        setTrickCards([...cards])
                     );
 
-                    await new Promise(r => setTimeout(r, 1500));
+                    await new Promise(r => setTimeout(r, 1000));
                 }
-
                 if (event.type === "TRICK_COMPLETED") {
-                    await new Promise(r => setTimeout(r, 1500));
+                    await new Promise(r => setTimeout(r, 1000));
                     dispatch(
                         setTrickCards([])
                     );
+                    cards = [];
                 }
+                
             }
 
             dispatch(
                 setSnapshot(result.snapshot)
-            );
-
-            dispatch(
-                setAnimating(false)
             );
 
             if (result.snapshot.completed) {

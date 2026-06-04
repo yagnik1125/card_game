@@ -139,14 +139,14 @@ export class GameService {
         cardId: string
     ): PlayTurnResponse {
         const session = GameSessionManager.get(gameId);
+
+        if (!session.gameState) {
+            throw new Error("Game not initialized");
+        }
         const player = session.match.players.find(p => p.id === playerId);
 
         if (!player) {
             throw new Error("Player not found");
-        }
-
-        if (!session.gameState) {
-            throw new Error("Game not initialized");
         }
 
         const legalCards = LegalMoveGenerator.getLegalCards(player, session.gameState.currentTrick);
@@ -165,9 +165,10 @@ export class GameService {
 
         const events: GameEvent[] = [];
 
-        const trickNumberBefore = session.gameState.currentTrick.trickNumber;
+        const trickBefore = session.gameState.currentTrick.trickNumber;
+        const roundBefore = session.gameState.currentRound.state.roundNumber;
+        const matchBefore = session.gameState.completed;
 
-        const roundNumberBefore = session.gameState.currentRound.state.roundNumber;
         PlayCardService.playCard(gameId, playerId, card);
 
         events.push({
@@ -178,39 +179,46 @@ export class GameService {
             rank: card.rank
         });
 
-        const botEvents = BotTurnService.executeAllBots(session);
+        const afterHuman = GameSessionManager.get(gameId);
 
-        events.push(...botEvents);
-
-        const updated = GameSessionManager.get(gameId);
-
-        const trickNumberAfter = updated.gameState?.currentTrick.trickNumber;
-
-        const roundNumberAfter = updated.gameState?.currentRound.state.roundNumber;
-
-        if (trickNumberAfter !== trickNumberBefore) {
+        if (afterHuman.gameState!.currentTrick.trickNumber !== trickBefore) {
             events.push({
                 type: "TRICK_COMPLETED"
             });
         }
-
-        if (roundNumberAfter !== roundNumberBefore) {
+        if (afterHuman.gameState!.currentRound.state.roundNumber !== roundBefore) {
             events.push({
                 type: "ROUND_COMPLETED",
-                roundNumber: roundNumberAfter || 0
+                roundNumber: afterHuman.gameState!.currentRound.state.roundNumber
             });
         }
-
-        if (updated.gameState?.completed) {
+        if (!matchBefore && afterHuman.gameState!.completed) {
             events.push({
-                type: "MATCH_COMPLETED", winner: updated.match.result?.winnerPlayerId
+                type: "MATCH_COMPLETED",
+                winner: afterHuman.match.result?.winnerPlayerId
             });
         }
 
-        events.push({
-            type: "TURN_CHANGED",
-            currentPlayerId: updated.gameState?.turnState.currentPlayerId || ""
-        });
+        const botEvents = BotTurnService.executeAllBots(afterHuman);
+
+        events.push(...botEvents);
+
+        // const updated = GameSessionManager.get(gameId);
+        // if (roundNumberAfter !== roundNumberBefore) {
+        //     events.push({
+        //         type: "ROUND_COMPLETED",
+        //         roundNumber: roundNumberAfter || 0
+        //     });
+        // }
+        // if (updated.gameState?.completed) {
+        //     events.push({
+        //         type: "MATCH_COMPLETED", winner: updated.match.result?.winnerPlayerId
+        //     });
+        // }
+        // events.push({
+        //     type: "TURN_CHANGED",
+        //     currentPlayerId: updated.gameState?.turnState.currentPlayerId || ""
+        // });
 
         return {
             events,
