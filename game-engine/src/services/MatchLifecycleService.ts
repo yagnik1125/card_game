@@ -3,8 +3,8 @@ import { MatchFactory } from "../factories/MatchFactory";
 import { PlayerManager } from "../managers/PlayerManager";
 
 export class MatchLifecycleService {
-    static createMatch(players: Player[]) {
+    static createMatch(players: Player[], totalRounds: number) {
         PlayerManager.resetMatchStats(players);
-        return MatchFactory.create(players);
+        return MatchFactory.create(players, totalRounds);
     }
 }

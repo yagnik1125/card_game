@@ -3,7 +3,7 @@ import { RoundEngine } from "../engines/RoundEngine";
 import { RoundState } from "../domain/round/RoundState";
 
 const players =
-  PlayerFactory.createPlayers();
+  PlayerFactory.createPlayers("hard");
 
 const roundState: RoundState = {
   roundNumber: 1,

@@ -1,11 +1,13 @@
 interface Props {
     player: any;
-    champion?: boolean;
+    champion: boolean;
+    active: boolean;
 }
 
 export default function Avatar({
     player,
-    champion
+    champion,
+    active
 }: Props) {
     if (!player) {
         return null;
@@ -45,7 +47,7 @@ export default function Avatar({
                 justify-center
                 text-2xl
                 border
-                bg-pink-700
+                ${active?"bg-yellow-400 text-black":"bg-pink-700"}
                 transition-all
             `}>
                 {player.id === "P1" ? "Y" : player?.name?.[0] ?? '?'}

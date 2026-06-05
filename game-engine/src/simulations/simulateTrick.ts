@@ -7,7 +7,7 @@ import { RoundState } from "../domain/round/RoundState";
 import { LegalMoveGenerator } from "../rules/LegalMoveGenerator";
 
 
-const players = PlayerFactory.createPlayers();
+const players = PlayerFactory.createPlayers("hard");
 
 const roundState: RoundState = {
     roundNumber: 1,

@@ -12,7 +12,7 @@ export class PlayerFactory {
             gamesWon: 0
         };
     }
-    static createPlayers(): Player[] {
+    static createPlayers(difficulty: | "easy" | "medium" | "hard"): Player[] {
         return [
             {
                 id: "P1",
@@ -28,7 +28,7 @@ export class PlayerFactory {
                 hand: [],
                 isBot: true,
                 isConnected: true,
-                strategy: BotFactory.create("hard"),
+                strategy: BotFactory.create(difficulty),
                 stats: this.createStats()
             },
             {
@@ -37,7 +37,7 @@ export class PlayerFactory {
                 hand: [],
                 isBot: true,
                 isConnected: true,
-                strategy: BotFactory.create("hard"),
+                strategy: BotFactory.create(difficulty),
                 stats: this.createStats()
             },
             {
@@ -46,7 +46,7 @@ export class PlayerFactory {
                 hand: [],
                 isBot: true,
                 isConnected: true,
-                strategy: BotFactory.create("hard"),
+                strategy: BotFactory.create(difficulty),
                 stats: this.createStats()
             }
         ];

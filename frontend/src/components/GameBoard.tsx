@@ -1,10 +1,18 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 
 import Avatar from "./Avatar";
 import PlayerHand from "./PlayerHand";
 import Card from "./Card";
 import { suitMap } from "@/utils/constants";
+import {
+    LogOut
+} from "lucide-react";
+
+import {
+    useNavigate
+} from "react-router-dom";
+import { setSnapshot, setWinner, setTrickCards, setAnimating, setDealing } from "@/store/slices/gameSlice";
 
 interface Props {
     snapshot: any;
@@ -15,6 +23,8 @@ export default function GameBoard({
     snapshot,
     onPlay,
 }: Props) {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
     const trickCards = useSelector(
         (state: RootState) => state.game.trickCards
     );
@@ -56,11 +66,6 @@ export default function GameBoard({
             return "text-white";
         }
     }
-
-    // const championName = (championId: string) => {
-    //     const champion = snapshot.players.find((p: any) => p.id === championId);
-    //     return champion?.name ?? "-";
-    // }
 
     return (
         <div className="bg-green-900 min-h-screen flex justify-center py-3">
@@ -130,6 +135,7 @@ export default function GameBoard({
                     <Avatar
                         player={top}
                         champion={snapshot.champion === top.id}
+                        active={snapshot.currentPlayerId === top.id}
                     />
                 </div>
 
@@ -139,6 +145,7 @@ export default function GameBoard({
                     <Avatar
                         player={left}
                         champion={snapshot.champion === left.id}
+                        active={snapshot.currentPlayerId === left.id}
                     />
                 </div>
 
@@ -148,29 +155,53 @@ export default function GameBoard({
                     <Avatar
                         player={right}
                         champion={snapshot.champion === right.id}
+                        active={snapshot.currentPlayerId === right.id}
                     />
                 </div>
 
-                {dealing && (
+                {/* Center Deck Shown after round completion */}
+
+                <div className={`
+                    absolute
+                    left-1/2
+                    top-1/2
+                    -translate-x-1/2
+                    -translate-y-1/2
+                    z-50
+                    transition-all
+                    duration-500
+                    ${dealing
+                        ? "opacity-100 scale-100"
+                        : "opacity-0 scale-75 pointer-events-none"}
+                    `}
+                >
                     <div className="
-                        absolute
-                        left-1/2
-                        top-1/2
-                        -translate-x-1/2
-                        -translate-y-1/2
-                        z-50
+                        w-18
+                        h-26
+                        rounded-xl
+                        border-2
+                        border-white
+                        shadow-2xl
+                        bg-red-900
+                        relative
+                        overflow-hidden
                     ">
                         <div className="
-                            w-16
-                            h-24
-                            bg-red-800
+                            absolute
+                            inset-0
+                            bg-linear-to-br
+                            from-red-700
+                            to-red-950
+                        "/>
+                        <div className="
+                            absolute
+                            inset-2
+                            border
+                            border-yellow-300
                             rounded-lg
-                            border-2
-                            border-white
-                            shadow-2xl
-                        " />
+                        "/>
                     </div>
-                )}
+                </div>
 
                 {/* Trick Area */}
 
@@ -244,12 +275,61 @@ export default function GameBoard({
                     />
                 </div>
 
+                {/* Quit Button */}
+
+                <div className="
+                    absolute
+                    left-4
+                    bottom-4
+                    z-30
+                ">
+                    <button
+                        onClick={() => {
+                            dispatch(setSnapshot(null));
+                            dispatch(setWinner(null));
+                            dispatch(setTrickCards([]));
+                            dispatch(setAnimating(false));
+                            dispatch(setDealing(false));
+                            navigate("/");
+                        }}
+                        className="
+                            h-14
+                            px-5
+                            rounded-2xl
+                            bg-black/35
+                            backdrop-blur-xl
+                            border
+                            border-white/10
+                            text-white
+                            flex
+                            items-center
+                            gap-3
+                            cursor-pointer
+                            hover:bg-red-600/80
+                            transition-all
+                            hover:scale-105
+                            active:scale-95
+                            shadow-xl
+                        "
+                    >
+                        <LogOut size={20} />
+                        <span className="
+                            font-bold
+                            hidden
+                            sm:block
+                        ">
+                            Quit
+                        </span>
+                    </button>
+                </div>
+
                 {/* Player */}
 
                 <div className="absolute bottom-[-1%] left-1/6 -translate-x-1/2 z-10">
                     <Avatar
                         player={player}
                         champion={snapshot.champion === player.id}
+                        active={snapshot.currentPlayerId === player.id}
                     />
                 </div>
             </div>

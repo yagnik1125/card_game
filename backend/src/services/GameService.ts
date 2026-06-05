@@ -11,9 +11,9 @@ import { GameEvent } from "../types/GameEvent";
 import { PlayTurnResponse } from "../types/PlayTurnResponse";
 
 export class GameService {
-    static createGame() {
-        const players = PlayerFactory.createPlayers();
-        return GameBootstrapService.createGame(players);
+    static createGame(numberOfRounds: number, difficulty: "easy" | "medium" | "hard") {
+        const players = PlayerFactory.createPlayers(difficulty);
+        return GameBootstrapService.createGame(players, numberOfRounds);
     }
 
     static getGame(gameId: string) {
@@ -180,22 +180,38 @@ export class GameService {
         });
 
         const afterHuman = GameSessionManager.get(gameId);
+        const trickCompleted =
+            afterHuman.gameState!.currentTrick.trickNumber !==
+            trickBefore;
 
-        if (afterHuman.gameState!.currentTrick.trickNumber !== trickBefore) {
-            events.push({
-                type: "TRICK_COMPLETED"
-            });
-        }
-        if (afterHuman.gameState!.currentRound.state.roundNumber !== roundBefore) {
-            events.push({
-                type: "ROUND_COMPLETED",
-                roundNumber: afterHuman.gameState!.currentRound.state.roundNumber
-            });
-        }
-        if (!matchBefore && afterHuman.gameState!.completed) {
+        const roundCompleted =
+            afterHuman.gameState!.currentRound.state.roundNumber !==
+            roundBefore;
+
+        const matchCompleted =
+            !matchBefore &&
+            afterHuman.gameState!.completed;
+
+        if (matchCompleted) {
             events.push({
                 type: "MATCH_COMPLETED",
-                winner: afterHuman.match.result?.winnerPlayerId
+                winner: afterHuman.match.result?.winnerPlayerId,
+                playerId:
+                    afterHuman.match.result?.winnerPlayerId,
+            });
+        }
+        else if (roundCompleted) {
+            events.push({
+                type: "ROUND_COMPLETED",
+                roundNumber: afterHuman.gameState!.currentRound.state.roundNumber,
+                playerId:
+                    afterHuman.gameState!.leaderPlayerId,
+            });
+        }
+        else if (trickCompleted) {
+            events.push({
+                type: "TRICK_COMPLETED",
+                playerId: afterHuman.gameState!.leaderPlayerId,
             });
         }
 

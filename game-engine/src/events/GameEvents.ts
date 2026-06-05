@@ -24,16 +24,19 @@ export interface BotPlayedEvent {
 
 export interface TrickCompletedEvent {
     type: "TRICK_COMPLETED";
+    playerId: string | null;
 }
 
 export interface RoundCompletedEvent {
     type: "ROUND_COMPLETED";
     roundNumber: number;
+    playerId: string | null;
 }
 
 export interface MatchCompletedEvent {
     type: "MATCH_COMPLETED";
     winner?: string;
+    playerId?: string;
 }
 
 export interface TurnChangedEvent {

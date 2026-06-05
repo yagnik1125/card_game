@@ -8,7 +8,7 @@ export class MatchEngine {
     static playMatch() {
         let previousChampionId: string | null = null;
         const roundWinners: string[] = [];
-        const players =PlayerFactory.createPlayers();
+        const players =PlayerFactory.createPlayers("hard");
         for (let roundNumber = 1; roundNumber <= 5; roundNumber++) {
             console.log(`\n================ ROUND ${roundNumber} ================`);
             PlayerManager.resetRoundStats(players);

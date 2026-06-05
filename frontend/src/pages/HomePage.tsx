@@ -1,59 +1,247 @@
-import {
-    useNavigate
-} from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import {
-    createGame
-} from "@/api/gameApi";
+import { createGame } from "@/api/gameApi";
+
+type Difficulty = | "easy" | "medium" | "hard";
 
 export default function HomePage() {
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
+
+    const [rounds, setRounds] =
+        useState(3);
+
+    const [difficulty, setDifficulty] =
+        useState<Difficulty>(
+            "medium"
+        );
+
+    const [creating, setCreating] =
+        useState(false);
+
     const create = async () => {
-        const result = await createGame();
-        navigate(`/game/${result.gameId}`);
+
+        try {
+
+            setCreating(
+                true
+            );
+
+            const result =
+                await createGame(
+                    rounds,
+                    difficulty
+                );
+
+            navigate(
+                `/game/${result.gameId}`
+            );
+        }
+
+        finally {
+
+            setCreating(
+                false
+            );
+        }
     };
+
     return (
-        <div
-            className="
-                min-h-screen
-                flex
-                items-center
-                justify-center
-                bg-slate-900
-            "
-        >
-            <div
-                className="
-                    bg-white
-                    p-12
-                    rounded-xl
-                    shadow-xl
-                "
-            >
-                <h1
-                    className="
-                        text-4xl
-                        font-bold
-                        mb-8
-                    "
-                >
-                    Trump & Twist
-                </h1>
+
+        <div className="
+            min-h-screen
+            bg-linear-to-br
+            from-slate-950
+            via-slate-900
+            to-green-950
+            flex
+            items-center
+            justify-center
+            px-4
+        ">
+
+            <div className="
+                w-full
+                max-w-xl
+                rounded-3xl
+                border
+                border-white/10
+                bg-white/5
+                backdrop-blur-xl
+                p-10
+                shadow-2xl
+            ">
+
+                {/* Header */}
+
+                <div className="
+                    text-center
+                    mb-10
+                ">
+
+                    <div className="
+                        text-7xl
+                        mb-4
+                    ">
+                        ♠️ ♥️ ♣️ ♦️
+                    </div>
+
+                    <h1 className="
+                        text-5xl
+                        font-black
+                        text-white
+                    ">
+                        Trump & Twist
+                    </h1>
+
+                    <p className="
+                        mt-3
+                        text-slate-400
+                    ">
+                        Challenge bots.
+                        Win tricks.
+                        Become champion.
+                    </p>
+
+                </div>
+
+                {/* ROUND SELECT */}
+
+                <div className="mb-10">
+
+                    <div className="
+                        text-white
+                        font-semibold
+                        mb-4
+                    ">
+                        Number Of Rounds
+                    </div>
+
+                    <div className="
+                        grid
+                        grid-cols-5
+                        gap-3
+                    ">
+
+                        {[1, 2, 3, 4, 5].map(
+                            round => (
+
+                                <button
+                                    key={round}
+
+                                    onClick={() =>
+                                        setRounds(
+                                            round
+                                        )
+                                    }
+
+                                    className={`
+                                        h-14
+                                        rounded-xl
+                                        font-bold
+                                        cursor-pointer
+                                        transition-all
+
+                                        ${rounds === round
+                                            ?
+                                            `
+                                            bg-green-500
+                                            text-black
+                                            scale-105
+                                            shadow-lg
+                                            `
+                                            :
+                                            `
+                                            bg-white/10
+                                            text-white
+                                            hover:bg-white/20
+                                            `
+                                        }
+                                    `}
+                                >
+
+                                    {round}
+
+                                </button>
+                            )
+                        )}
+
+                    </div>
+
+                </div>
+
+
+                {/* DIFFICULTY SELECT */}
+
+                <div className="
+                    mb-10
+                ">
+
+                    <div className="
+                        text-white
+                        font-semibold
+                        mb-4
+                    ">
+                        Bot Difficulty
+                    </div>
+                    <div className="
+                        grid
+                        grid-cols-3
+                        gap-3
+                    ">
+                        {["easy", "medium", "hard"].map(
+                            level => (
+                                <button
+                                    key={level}
+                                    onClick={() =>
+                                        setDifficulty(level as Difficulty)
+                                    }
+                                    className={`
+                                        h-14
+                                        rounded-xl
+                                        font-bold
+                                        capitalize
+                                        cursor-pointer
+                                        transition-all
+                                        ${difficulty === level
+                                            ? level === "easy"
+                                                ? `bg-blue-500 text-white scale-105`
+                                                : level === "medium"
+                                                    ? `bg-yellow-500 text-black scale-105`
+                                                    : `bg-red-500 text-white scale-105`
+                                            : `bg-white/10 text-white hover:bg-white/20`
+                                        }
+                                    `}
+                                >
+                                    {level}
+                                </button>
+                            )
+                        )}
+                    </div>
+                </div>
+                {/* PLAY BUTTON */}
                 <button
+                    disabled={creating}
                     onClick={create}
                     className="
-                        bg-blue-600
-                        text-white
-                        px-6
-                        py-3
-                        rounded
                         w-full
+                        h-16
+                        rounded-2xl
+                        bg-green-500
+                        text-black
+                        text-xl
+                        font-black
                         cursor-pointer
+                        transition-all
+                        hover:scale-[1.02]
+                        active:scale-[.98]
+                        disabled:opacity-50
                     "
                 >
-                    Create Game
+                    {creating ? "Creating..." : `Play ${rounds} Round ${difficulty} Game`}
                 </button>
             </div>
         </div>
-    )
+    );
 }

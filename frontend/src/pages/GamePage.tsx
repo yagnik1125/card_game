@@ -26,6 +26,7 @@ import {
 } from "@/store/slices/gameSlice";
 import GameBoard from "@/components/GameBoard";
 import WinnerModal from "@/components/WinnerModal";
+import GameLoader from "@/components/GameLoader";
 
 export default function GamePage() {
     const dispatch = useDispatch();
@@ -40,6 +41,7 @@ export default function GamePage() {
         (state: RootState) => state.game.trickCards
     );
     const playingRef = useRef(false);
+
     const load = async () => {
         if (!gameId) return;
         const view = await getView(gameId);
@@ -48,8 +50,14 @@ export default function GamePage() {
             suit: play.card.suit,
             rank: play.card.rank
         }));
+        // dispatch(setSnapshot(view));
+        dispatch(setDealing(true));
+        await new Promise(r => setTimeout(r, 1500));
         dispatch(setTrickCards(trickCards));
         dispatch(setSnapshot(view));
+        await new Promise(r => requestAnimationFrame(() => r(null)));
+        dispatch(setDealing(false));
+        await new Promise(r => setTimeout(r, 1600));
     };
     useEffect(() => {
         load();
@@ -68,14 +76,8 @@ export default function GamePage() {
         );
         try {
             const result = await playTurn(gameId, "P1", cardId);
-            const updatedSnapshot = {
-                ...snapshot,
-                players: snapshot.players.map((p: any) =>
-                    p.id === "P1" ? { ...p, hand: p.hand.filter((c: any) => c.id !== cardId) } : p
-                )
-            };
-            dispatch(setSnapshot(updatedSnapshot));
             let cards: any[] = [...trickCards];
+            let latestSnapshot = snapshot;
             for (const event of result.events) {
                 if (event.type === "CARD_PLAYED" || event.type === "BOT_PLAY") {
                     cards.push({
@@ -83,30 +85,67 @@ export default function GamePage() {
                         suit: event.suit,
                         rank: event.rank,
                     });
-
                     dispatch(
                         setTrickCards([...cards])
                     );
-
+                    latestSnapshot = {
+                        ...latestSnapshot,
+                        currentPlayerId: event.playerId,
+                        players: latestSnapshot.players.map(
+                            (p: any) => p.id === "P1" && event.playerId === "P1"
+                                ? { ...p, hand: p.hand.filter((c: any) => c.id !== event.cardId) }
+                                : p
+                        )
+                    };
+                    dispatch(
+                        setSnapshot(latestSnapshot)
+                    );
                     await new Promise(r => setTimeout(r, 700));
                 }
                 if (event.type === "TRICK_COMPLETED") {
                     await new Promise(r => setTimeout(r, 700));
-                    dispatch(
-                        setTrickCards([])
-                    );
+                    dispatch(setTrickCards([]));
                     cards = [];
+                    await new Promise(r => requestAnimationFrame(() => r(null)));
+                    latestSnapshot = result.snapshot;
+                    dispatch(
+                        setSnapshot({
+                            ...latestSnapshot,
+                            currentPlayerId: event.playerId
+                        })
+                    );
                 }
                 if (event.type === "ROUND_COMPLETED") {
+                    await new Promise(r => setTimeout(r, 700));
+                    dispatch(setTrickCards([]));
+                    cards = [];
+                    await new Promise(r => setTimeout(r, 500));
                     dispatch(setDealing(true));
-                    dispatch(
-                        setSnapshot(result.snapshot)
-                    );
                     await new Promise(r => setTimeout(r, 1500));
+                    latestSnapshot = result.snapshot;
+                    dispatch(
+                        setSnapshot({
+                            ...latestSnapshot,
+                            currentPlayerId: event.playerId
+                        })
+                    );
+                    await new Promise(r => requestAnimationFrame(() => r(null)));
                     dispatch(setDealing(false));
+                    await new Promise(r => setTimeout(r, 1600));
                 }
                 if (event.type === "MATCH_COMPLETED") {
+                    await new Promise(r => setTimeout(r, 700));
+                    dispatch(setTrickCards([]));
+                    cards = [];
+                    latestSnapshot = result.snapshot;
+                    dispatch(
+                        setSnapshot({
+                            ...latestSnapshot,
+                            currentPlayerId: event.playerId
+                        })
+                    );
                     await new Promise(r => setTimeout(r, 1200));
+
                 }
             }
 
@@ -131,9 +170,7 @@ export default function GamePage() {
     };
 
     if (!snapshot) {
-        return <div>
-            Loading...
-        </div>
+        return <GameLoader />;
     }
 
     return (

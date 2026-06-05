@@ -45,7 +45,7 @@ export class TrickEngine {
         card,
         roundState
       );
-      console.log(`Trump declared: ${card.suit}`);
+      console.log(`Trump declared: ${card.suit}, by ${player.name}`);
     }
     trick.plays.push({
       playerId: player.id,

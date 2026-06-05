@@ -4,7 +4,8 @@ import { Match } from "../domain/match/Match";
 export class MatchFactory {
 
     static create(
-        players: Player[]
+        players: Player[],
+        totalRounds: number,
     ): Match {
         return {
             id: crypto.randomUUID(),
@@ -12,7 +13,7 @@ export class MatchFactory {
             rounds: [],
             state: {
                 currentRound: 1,
-                totalRounds: 5,
+                totalRounds: totalRounds,
                 isCompleted: false,
                 championPlayerId: null
             },

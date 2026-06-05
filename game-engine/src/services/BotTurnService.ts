@@ -62,6 +62,9 @@ export class BotTurnService {
             const roundBefore = session.gameState.currentRound.state.roundNumber;
             const matchBefore = session.gameState.completed;
             const legalCards = LegalMoveGenerator.getLegalCards(currentPlayer, session.gameState.currentTrick);
+            if (legalCards.length === 0) {
+                break;
+            }
             const decision = BotService.chooseCard(
                 currentPlayer,
                 legalCards,
@@ -88,24 +91,30 @@ export class BotTurnService {
             session.gameState.turnState.currentPlayerId = nextPlayer.id;
             GameFlowService.process(session);
             const trickAfter = session.gameState.currentTrick.trickNumber;
-            if (trickAfter !== trickBefore) {
-                events.push({
-                    type: "TRICK_COMPLETED"
-                });
-            }
             const roundAfter = session.gameState.currentRound.state.roundNumber;
-            if (roundAfter !== roundBefore) {
-                events.push({
-                    type: "ROUND_COMPLETED",
-                    roundNumber: roundAfter
-                });
-            }
             const matchAfter = session.gameState.completed;
             if (!matchBefore && matchAfter) {
                 events.push({
                     type: "MATCH_COMPLETED",
                     winner:
+                        session.match.result?.winnerPlayerId,
+                    playerId:
                         session.match.result?.winnerPlayerId
+                });
+            }
+            else if (roundAfter !== roundBefore) {
+                events.push({
+                    type: "ROUND_COMPLETED",
+                    roundNumber: roundAfter,
+                    playerId:
+                        session.gameState.leaderPlayerId
+                });
+            }
+            else if (trickAfter !== trickBefore) {
+                events.push({
+                    type: "TRICK_COMPLETED",
+                    playerId:
+                        session.gameState.leaderPlayerId
                 });
             }
         }

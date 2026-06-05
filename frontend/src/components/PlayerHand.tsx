@@ -34,12 +34,14 @@ export default function PlayerHand({ cards, legalMoves, trumpSuit, onPlay, disab
                             ${index !== 0 ? "ml-[-3%]" : ""}
                             transition-all
                             duration-700
+                            ease-out
+                            will-change-transform
                         `}
                         style={{
                             zIndex: index,
-                            transform: dealing ? "translate(-35vw,-30vh) scale(.2)" : "translate(0,0) scale(1)",
+                            transform: dealing ? "translate(-35vw,-30vh) scale(0)" : "translate(0,0) scale(1)",
                             opacity: dealing ? 0 : 1,
-                            transitionDelay: `${index * 80}ms`
+                            transitionDelay: `${index * 120}ms`
                         }}
                     >
                         <Card
