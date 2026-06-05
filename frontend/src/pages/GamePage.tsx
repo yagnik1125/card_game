@@ -20,6 +20,7 @@ import {
 import {
     setSnapshot,
     setAnimating,
+    setDealing,
     setTrickCards,
     setWinner,
 } from "@/store/slices/gameSlice";
@@ -42,6 +43,12 @@ export default function GamePage() {
     const load = async () => {
         if (!gameId) return;
         const view = await getView(gameId);
+        const trickCards = view.currentTrick.plays.map((play: any) => ({
+            playerId: play.playerId,
+            suit: play.card.suit,
+            rank: play.card.rank
+        }));
+        dispatch(setTrickCards(trickCards));
         dispatch(setSnapshot(view));
     };
     useEffect(() => {
@@ -61,6 +68,13 @@ export default function GamePage() {
         );
         try {
             const result = await playTurn(gameId, "P1", cardId);
+            const updatedSnapshot = {
+                ...snapshot,
+                players: snapshot.players.map((p: any) =>
+                    p.id === "P1" ? { ...p, hand: p.hand.filter((c: any) => c.id !== cardId) } : p
+                )
+            };
+            dispatch(setSnapshot(updatedSnapshot));
             let cards: any[] = [...trickCards];
             for (const event of result.events) {
                 if (event.type === "CARD_PLAYED" || event.type === "BOT_PLAY") {
@@ -74,16 +88,26 @@ export default function GamePage() {
                         setTrickCards([...cards])
                     );
 
-                    await new Promise(r => setTimeout(r, 1000));
+                    await new Promise(r => setTimeout(r, 700));
                 }
                 if (event.type === "TRICK_COMPLETED") {
-                    await new Promise(r => setTimeout(r, 1000));
+                    await new Promise(r => setTimeout(r, 700));
                     dispatch(
                         setTrickCards([])
                     );
                     cards = [];
                 }
-                
+                if (event.type === "ROUND_COMPLETED") {
+                    dispatch(setDealing(true));
+                    dispatch(
+                        setSnapshot(result.snapshot)
+                    );
+                    await new Promise(r => setTimeout(r, 1500));
+                    dispatch(setDealing(false));
+                }
+                if (event.type === "MATCH_COMPLETED") {
+                    await new Promise(r => setTimeout(r, 1200));
+                }
             }
 
             dispatch(

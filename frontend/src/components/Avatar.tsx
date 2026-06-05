@@ -1,7 +1,12 @@
+interface Props {
+    player: any;
+    champion?: boolean;
+}
+
 export default function Avatar({
     player,
-    active,
-}: any) {
+    champion
+}: Props) {
     if (!player) {
         return null;
     }
@@ -13,30 +18,46 @@ export default function Avatar({
             text-white
             relative
         ">
+            {champion && (
+                <div className="
+                    absolute
+                    -top-1
+                    -left-2
+                    w-[clamp(1.5rem,4vw,1.5rem)]
+                    h-[clamp(1.5rem,4vw,1.5rem)]
+                    text-[clamp(1.2rem,1vw,.9rem)]
+                    rounded-full
+                    text-black
+                    flex
+                    items-center
+                    justify-center
+                    font-bold
+                ">
+                    👑
+                </div>
+            )}
             <div className={`
-                w-15
-                h-15
+                w-[clamp(2rem,5vw,5rem)]
+                h-[clamp(2rem,5vw,5rem)]
                 rounded-full
                 flex
                 items-center
                 justify-center
-                text-4xl
+                text-2xl
                 border
-                ${active
-                    ? "bg-yellow-400 text-black scale-110 shadow-2xl"
-                    : "bg-pink-700"
-                }
+                bg-pink-700
                 transition-all
             `}>
                 {player.id === "P1" ? "Y" : player?.name?.[0] ?? '?'}
             </div>
             <div className="
                 absolute
-                -top-3
-                -right-1
+                -top-1
+                -right-2
                 border
-                w-7
-                h-7
+                w-[clamp(1.5rem,2vw,1.5rem)]
+                h-[clamp(1.5rem,2vw,1.5rem)]
+                text-[clamp(.65rem,1vw,.9rem)]
                 rounded-full
                 bg-yellow-400
                 text-black

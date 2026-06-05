@@ -6,6 +6,7 @@ interface GameState {
     snapshot: any | null;
     trickCards: any[];
     animating: boolean;
+    dealing: boolean;
     loading: boolean;
     winner: any | null;
 }
@@ -13,6 +14,7 @@ const initialState: GameState = {
     snapshot: null,
     trickCards: [],
     animating: false,
+    dealing: false,
     loading: false,
     winner: null,
 };
@@ -35,7 +37,10 @@ const slice =
             },
             setLoading(state, action) {
                 state.loading = action.payload;
-            }
+            },
+            setDealing(state, action) {
+                state.dealing = action.payload;
+            },
         }
     });
 
@@ -45,5 +50,6 @@ export const {
     setAnimating,
     setWinner,
     setLoading,
+    setDealing,
 } = slice.actions;
 export default slice.reducer;

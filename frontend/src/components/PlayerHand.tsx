@@ -1,4 +1,7 @@
+import { useSelector } from "react-redux";
 import Card from "./Card";
+import { suitOrder } from "@/utils/constants";
+import type { RootState } from "@/store/store";
 
 interface Props {
     cards: any[];
@@ -9,16 +12,35 @@ interface Props {
 }
 
 export default function PlayerHand({ cards, legalMoves, trumpSuit, onPlay, disabled }: Props) {
+    const sortedCards = [...cards].sort((a, b) => {
+        const suitDiff = suitOrder[a.suit] - suitOrder[b.suit];
+        if (suitDiff !== 0) {
+            return suitDiff;
+        }
+        return b.rank - a.rank;
+    });
+    const dealing = useSelector(
+        (state: RootState) => state.game.dealing
+    );
     return (
         <div className="flex justify-center px-8">
-            {cards.map((card, index) => {
+            {sortedCards.map((card, index) => {
                 const legal = legalMoves.includes(card.id);
 
                 return (
                     <div
                         key={card.id}
-                        className={index !== 0 ? "-ml-5" : ""}
-                        style={{ zIndex: index }}
+                        className={`
+                            ${index !== 0 ? "ml-[-3%]" : ""}
+                            transition-all
+                            duration-700
+                        `}
+                        style={{
+                            zIndex: index,
+                            transform: dealing ? "translate(-35vw,-30vh) scale(.2)" : "translate(0,0) scale(1)",
+                            opacity: dealing ? 0 : 1,
+                            transitionDelay: `${index * 80}ms`
+                        }}
                     >
                         <Card
                             card={card}

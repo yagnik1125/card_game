@@ -12,3 +12,10 @@ export function rankText(rank: number) {
     if (rank === 14) return "A";
     return rank;
 }
+
+export const suitOrder: Record<string, number> = {
+    SPADES: 0,
+    HEARTS: 1,
+    CLUBS: 2,
+    DIAMONDS: 3,
+};
