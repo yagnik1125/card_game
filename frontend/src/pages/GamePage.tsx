@@ -110,6 +110,13 @@ export default function GamePage() {
                     );
                     await new Promise(r => setTimeout(r, 700));
                 }
+                if (event.type === "TRUMP_DECLARED") {
+                    latestSnapshot = {
+                        ...latestSnapshot,
+                        trumpSuit: result.snapshot.trumpSuit,
+                    };
+                    dispatch(setSnapshot(latestSnapshot));
+                }
                 if (event.type === "TRICK_COMPLETED") {
                     await new Promise(r => setTimeout(r, 700));
                     dispatch(setTrickCards([]));
@@ -153,7 +160,6 @@ export default function GamePage() {
                         })
                     );
                     await new Promise(r => setTimeout(r, 1200));
-
                 }
             }
 
@@ -184,12 +190,12 @@ export default function GamePage() {
     return (
         <>
             <GameBoard
-                snapshot={snapshot}
                 onPlay={handlePlay}
             />
 
             {winner && <WinnerModal
                 winner={winner}
+                gameId={snapshot.gameId}
             />}
         </>
     )

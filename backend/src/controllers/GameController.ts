@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { GameService } from "../services/GameService";
+import { Card, GameSession, GameSessionManager } from "trump-and-twist-game-engine";
+import { GameStateResponse } from "../types/GameStateResponse";
+import { PlayTurnResponse } from "../types/PlayTurnResponse";
 
 interface GameParams {
     gameId: string;
@@ -33,7 +36,7 @@ export class GameController {
         res: Response
     ) {
         try {
-            const session = GameService.createGame(req.body.numberOfRounds, req.body.difficulty);
+            const session: GameSession = GameService.createGame(req.body.numberOfRounds, req.body.difficulty);
             return res.status(201).json({
                 success: true,
                 data: session
@@ -50,8 +53,8 @@ export class GameController {
         res: Response
     ) {
         try {
-            const session = GameService.getGame(req.params.gameId);
-            return res.json({
+            const session: GameSession = GameService.getGame(req.params.gameId);
+            return res.status(200).json({
                 success: true,
                 data: session
             });
@@ -70,7 +73,7 @@ export class GameController {
         try {
             const { gameId, playerId, cardId } = req.body;
             const session = GameService.playCard(gameId, playerId, cardId);
-            return res.json({
+            return res.status(200).json({
                 success: true,
                 data: session
             });
@@ -87,8 +90,8 @@ export class GameController {
         res: Response
     ) {
         try {
-            const cards = GameService.getLegalMoves(req.params.gameId, req.params.playerId);
-            return res.json({
+            const cards: Card[] = GameService.getLegalMoves(req.params.gameId, req.params.playerId);
+            return res.status(200).json({
                 success: true,
                 data: cards,
             });
@@ -105,7 +108,7 @@ export class GameController {
         res: Response
     ) {
         try {
-            return res.json({
+            return res.status(200).json({
                 success: true,
                 data: GameService.getTurn(req.params.gameId)
             });
@@ -122,8 +125,8 @@ export class GameController {
         res: Response
     ) {
         try {
-            const state = GameService.getGameState(req.params.gameId);
-            return res.json({
+            const state: GameStateResponse = GameService.getGameState(req.params.gameId);
+            return res.status(200).json({
                 success: true,
                 data: state
             });
@@ -141,7 +144,7 @@ export class GameController {
     ) {
         try {
             const hand = GameService.getPlayerHand(req.params.gameId, req.params.playerId);
-            return res.json({
+            return res.status(200).json({
                 success: true,
                 data: hand
             });
@@ -158,15 +161,34 @@ export class GameController {
         res: Response
     ) {
         try {
-            return res.json({
+            return res.status(200).json({
                 success: true,
-                data:GameService.getView(req.params.gameId)
+                data: GameService.getView(req.params.gameId)
             });
         } catch (error: any) {
             return res.status(400).json({
-                    success: false,
-                    message: error.message
-                });
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    static removeGame(
+        req: Request<GameParams>,
+        res: Response
+    ) {
+        try {
+            GameSessionManager.remove(req.params.gameId);
+            return res.status(204).json({
+                success: true,
+                message: "Game removed Successfully."
+            });
+        }
+        catch (error: any) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
         }
     }
 
@@ -175,12 +197,12 @@ export class GameController {
         res: Response
     ) {
         try {
-            const result = GameService.playTurn(
+            const result: PlayTurnResponse = GameService.playTurn(
                 req.body.gameId,
                 req.body.playerId,
                 req.body.cardId
             );
-            return res.json({
+            return res.status(200).json({
                 success: true,
                 data: result
             });

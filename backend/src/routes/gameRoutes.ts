@@ -14,6 +14,11 @@ router.get(
     GameController.getGame
 );
 
+router.delete(
+    "/:gameId",
+    GameController.removeGame
+);
+
 router.get(
     "/:gameId/legal-moves/:playerId",
     GameController.getLegalMoves

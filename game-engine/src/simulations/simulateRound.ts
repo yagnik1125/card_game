@@ -1,8 +1,9 @@
 import { PlayerFactory } from "../factories/PlayerFactory";
 import { RoundEngine } from "../engines/RoundEngine";
 import { RoundState } from "../domain/round/RoundState";
+import { Player } from "../core/Player";
 
-const players =
+const players: Player[] =
   PlayerFactory.createPlayers("hard");
 
 const roundState: RoundState = {
@@ -12,7 +13,7 @@ const roundState: RoundState = {
   trumpDeclared: false,
 };
 
-const championId =
+const championId: string =
   RoundEngine.playRound(
     players,
     roundState,

@@ -10,7 +10,7 @@ export class LegalMoveGenerator {
         if (!trick.leadSuit) {
             return player.hand;
         }
-        const matchingCards = player.hand.filter(card => card.suit === trick.leadSuit);
+        const matchingCards: Card[] = player.hand.filter(card => card.suit === trick.leadSuit);
         if (matchingCards.length) {
             return matchingCards;
         }

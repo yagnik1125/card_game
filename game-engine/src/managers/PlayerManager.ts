@@ -1,13 +1,13 @@
 import { Player } from "../core/Player";
 
 export class PlayerManager {
-    static resetRoundStats(players: Player[]) {
+    static resetRoundStats(players: Player[]): void {
         players.forEach(player => { player.stats.tricksWonThisRound = 0; });
     }
-    static clearHands(players: Player[]) {
+    static clearHands(players: Player[]): void {
         players.forEach(player => { player.hand = []; });
     }
-    static resetMatchStats(players: Player[]) {
+    static resetMatchStats(players: Player[]): void {
         players.forEach(player => {
             player.stats.tricksWonThisRound = 0;
             player.stats.totalTricksWon = 0;

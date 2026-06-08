@@ -14,47 +14,37 @@ export const createGame = async (numberOfRounds: number, difficulty: "easy" | "m
     return response.data.data;
 };
 
-export const getGame = async (
-    gameId: string
-) => {
+export const getGame = async (gameId: string) => {
     const response = await API.get(`/games/${gameId}`);
     return response.data.data;
 };
 
-export const getPlayerHand = async (
-    gameId: string,
-    playerId: string
-) => {
+export const removeGame = async (gameId: string) => {
+    const response = await API.delete(`/games/${gameId}`);
+    return response.data;
+};
+
+export const getPlayerHand = async (gameId: string, playerId: string) => {
     const response = await API.get(`/games/${gameId}/player/${playerId}/hand`);
     return response.data.data;
 };
 
-export const getGameState = async (
-    gameId: string
-) => {
+export const getGameState = async (gameId: string) => {
     const response = await API.get(`/games/${gameId}/state`);
     return response.data.data;
 };
 
-export const getLegalMoves = async (
-    gameId: string,
-    playerId: string
-) => {
+export const getLegalMoves = async (gameId: string, playerId: string) => {
     const response = await API.get(`/games/${gameId}/legal-moves/${playerId}`);
     return response.data.data;
 };
 
-export const getTurn =
-    async (gameId: string) => {
-        const response = await API.get(`/games/${gameId}/turn`);
-        return response.data.data;
-    };
+export const getTurn = async (gameId: string) => {
+    const response = await API.get(`/games/${gameId}/turn`);
+    return response.data.data;
+};
 
-export const playCard = async (
-    gameId: string,
-    playerId: string,
-    cardId: string
-) => {
+export const playCard = async (gameId: string, playerId: string, cardId: string) => {
     const response = await API.post("/games/play-card",
         {
             gameId,
@@ -70,11 +60,7 @@ export const getView = async (gameId: string) => {
     return res.data.data;
 };
 
-export const playTurn = async (
-    gameId: string,
-    playerId: string,
-    cardId: string
-) => {
+export const playTurn = async (gameId: string, playerId: string, cardId: string) => {
     const res = await API.post("/games/play-turn",
         {
             gameId,

@@ -1,16 +1,17 @@
+import { Card } from "../core/Card";
 import { Deck } from "../core/Deck";
 import { Player } from "../core/Player";
 
 export class DeckManager {
   static dealCards(
     players: Player[]
-  ) {
-    const deck = new Deck();
+  ): void {
+    const deck: Deck = new Deck();
     deck.shuffle();
-    const hands =deck.deal(players.length);
+    const hands: Card[][] = deck.deal(players.length);
     players.forEach(
       (player, index) => {
-        player.hand =hands[index];
+        player.hand = hands[index];
       }
     );
   }

@@ -19,10 +19,10 @@ export class TrumpResolver {
         if (card.suit === leadSuit) {
             return false;
         }
-        const hasLeadSuit = player.hand.some(c => c.suit === leadSuit);
+        const hasLeadSuit: boolean = player.hand.some(c => c.suit === leadSuit);
         return !hasLeadSuit;
     }
-    static declareTrump(card: Card, state: RoundState) {
+    static declareTrump(card: Card, state: RoundState): void {
         state.trumpSuit = card.suit;
         state.trumpDeclared = true;
     }

@@ -3,13 +3,14 @@ import { PlayerFactory } from "../factories/PlayerFactory";
 import { DeckManager } from "../managers/DeckManager";
 import { PlayerManager } from "../managers/PlayerManager";
 import { RoundState } from "../domain/round/RoundState";
+import { Player } from "../core/Player";
 
 export class MatchEngine {
     static playMatch() {
         let previousChampionId: string | null = null;
         const roundWinners: string[] = [];
-        const players =PlayerFactory.createPlayers("hard");
-        for (let roundNumber = 1; roundNumber <= 5; roundNumber++) {
+        const players: Player[] = PlayerFactory.createPlayers("hard");
+        for (let roundNumber: number = 1; roundNumber <= 5; roundNumber++) {
             console.log(`\n================ ROUND ${roundNumber} ================`);
             PlayerManager.resetRoundStats(players);
             PlayerManager.clearHands(players);
@@ -20,17 +21,17 @@ export class MatchEngine {
                 championPlayerId: previousChampionId,
                 trumpDeclared: false,
             };
-            const championId =
+            const championId: string =
                 RoundEngine.playRound(
                     players,
                     roundState,
                     "P1"
                 );
             roundWinners.push(championId);
-            previousChampionId =championId;
+            previousChampionId = championId;
             console.log(`Round ${roundNumber} Champion: ${championId}`);
         }
-        const matchWinner =
+        const matchWinner: Player =
             players.reduce(
                 (best, current) =>
                     current.stats.totalTricksWon >

@@ -31,7 +31,7 @@ export default function PlayerHand({ cards, legalMoves, trumpSuit, onPlay, disab
                     <div
                         key={card.id}
                         className={`
-                            ${index !== 0 ? "ml-[-3%]" : ""}
+                            ${index !== 0 ? "ml-[-2%]" : ""}
                             transition-all
                             duration-700
                             ease-out

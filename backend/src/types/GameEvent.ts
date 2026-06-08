@@ -4,7 +4,8 @@ export type GameEvent =
     | TrickCompletedEvent
     | RoundCompletedEvent
     | MatchCompletedEvent
-    | TurnChangedEvent;
+    | TurnChangedEvent
+    | TrumpDeclaredEvent;
 
 export interface CardPlayedEvent {
     type: "CARD_PLAYED";
@@ -42,4 +43,9 @@ export interface MatchCompletedEvent {
 export interface TurnChangedEvent {
     type: "TURN_CHANGED";
     currentPlayerId: string;
+}
+
+export interface TrumpDeclaredEvent {
+    type: "TRUMP_DECLARED";
+    playerId: string;
 }

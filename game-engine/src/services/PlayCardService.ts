@@ -3,21 +3,24 @@ import { GameSessionManager } from "../session/GameSessionManager";
 import { MoveValidator } from "../rules/MoveValidator";
 import { TrickEngine } from "../engines/TrickEngine";
 import { GameFlowService } from "./GameFlowService";
+import { GameSession } from "../session/GameSession";
+import { GameState } from "../session/GameState";
+import { Player } from "../core/Player";
 
 export class PlayCardService {
     static playCard(
         gameId: string,
         playerId: string,
         card: Card
-    ) {
-        const session = GameSessionManager.get(gameId);
+    ): GameSession {
+        const session: GameSession = GameSessionManager.get(gameId);
         if (!session.gameState) {
             throw new Error(
                 "Game not initialized"
             );
         }
-        const gameState = session.gameState;
-        const player = session.match.players.find(p => p.id === playerId);
+        const gameState: GameState = session.gameState;
+        const player: Player | undefined = session.match.players.find(p => p.id === playerId);
         if (!player) {
             throw new Error(
                 "Player not found"
@@ -28,7 +31,7 @@ export class PlayCardService {
                 "Not your turn"
             );
         }
-        const valid = MoveValidator.canPlayCard(player, card, gameState.currentTrick);
+        const valid: boolean = MoveValidator.canPlayCard(player, card, gameState.currentTrick);
         if (!valid) {
             throw new Error(
                 "Invalid move"
@@ -47,13 +50,13 @@ export class PlayCardService {
         return session;
     }
 
-    private static moveToNextPlayer(session: any) {
+    private static moveToNextPlayer(session: GameSession) {
         const players = session.match.players;
         const currentIndex = players.findIndex(
-            (p: any) => p.id === session.gameState.turnState.currentPlayerId
+            (p: Player) => p.id === session.gameState!.turnState.currentPlayerId
         );
         const next = players[(currentIndex + 1) % players.length];
-        session.gameState.turnState.currentPlayerId = next.id;
-        session.gameState.turnState.turnNumber++;
+        session.gameState!.turnState.currentPlayerId = next.id;
+        session.gameState!.turnState.turnNumber++;
     }
 }

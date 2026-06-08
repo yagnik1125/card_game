@@ -13,59 +13,52 @@ import {
     useNavigate
 } from "react-router-dom";
 import { setSnapshot, setWinner, setTrickCards, setAnimating, setDealing } from "@/store/slices/gameSlice";
+import { removeGame } from "@/api/gameApi";
 
 interface Props {
-    snapshot: any;
     onPlay: (cardId: string) => void;
 }
 
 export default function GameBoard({
-    snapshot,
     onPlay,
 }: Props) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const snapshot = useSelector(
+        (state: RootState) => state.game.snapshot
+    );
     const trickCards = useSelector(
         (state: RootState) => state.game.trickCards
     );
-
     const animating = useSelector(
         (state: RootState) => state.game.animating
     );
-
     const player = snapshot.players.find(
         (p: any) => p.id === "P1"
     );
-
     const left = snapshot.players.find(
         (p: any) => p.id === "P2"
     );
-
     const top = snapshot.players.find(
         (p: any) => p.id === "P3"
     );
-
     const right = snapshot.players.find(
         (p: any) => p.id === "P4"
     );
-
     const dealing = useSelector(
         (state: RootState) => state.game.dealing
-    );
+    )
 
-    const trumpColor = (snapshot: any) => {
-        if (snapshot.trumpSuit) {
-            if (snapshot.trumpSuit === "HEARTS" || snapshot.trumpSuit === "DIAMONDS") {
-                return "text-red-600";
-            }
-            else {
-                return "text-black";
-            }
-        }
-        else {
-            return "text-white";
-        }
-    }
+    const quitGame = async () => {
+        // console.log(snapshot.gameId);
+        await removeGame(snapshot.gameId);
+        dispatch(setSnapshot(null));
+        dispatch(setWinner(null));
+        dispatch(setTrickCards([]));
+        dispatch(setAnimating(false));
+        dispatch(setDealing(false));
+        navigate("/");
+    };
 
     return (
         <div className="bg-green-900 min-h-screen flex justify-center py-3">
@@ -88,12 +81,12 @@ export default function GameBoard({
                 {/* TopRight  Panel */}
 
                 <div className="absolute right-0 top-0 z-20">
-                    <div className="bg-black/30 backdrop-blur-md rounded-2xl px-4 py-3 text-white border border-white/10">
+                    <div className="bg-black/15 backdrop-blur-md rounded-2xl px-4 py-3 text-white border border-white/10">
                         <div className="text-xs uppercase text-gray-300">
                             Trump
                         </div>
 
-                        <div className={`text-3xl font-bold ${trumpColor(snapshot)}`}>
+                        <div className={`text-3xl font-bold`}>
                             {snapshot.trumpSuit
                                 ? suitMap[snapshot.trumpSuit]
                                 : "-"
@@ -219,7 +212,6 @@ export default function GameBoard({
                                     transform: "translateX(-50%)",
                                 };
                                 break;
-
                             case "P2":
                                 style = {
                                     left: "25%",
@@ -227,7 +219,6 @@ export default function GameBoard({
                                     transform: "translateY(-50%)",
                                 };
                                 break;
-
                             case "P3":
                                 style = {
                                     top: "5%",
@@ -235,7 +226,6 @@ export default function GameBoard({
                                     transform: "translateX(-50%)",
                                 };
                                 break;
-
                             case "P4":
                                 style = {
                                     right: "25%",
@@ -284,14 +274,7 @@ export default function GameBoard({
                     z-30
                 ">
                     <button
-                        onClick={() => {
-                            dispatch(setSnapshot(null));
-                            dispatch(setWinner(null));
-                            dispatch(setTrickCards([]));
-                            dispatch(setAnimating(false));
-                            dispatch(setDealing(false));
-                            navigate("/");
-                        }}
+                        onClick={quitGame}
                         className="
                             h-14
                             px-5

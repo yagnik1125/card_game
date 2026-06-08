@@ -14,17 +14,17 @@ export class MediumBot
     trick: Trick,
     roundState: RoundState
   ): BotDecision {
-    const sorted = [...legalCards].sort((a, b) => a.rank - b.rank);
+    const sorted: Card[] = [...legalCards].sort((a, b) => a.rank - b.rank);
     if (trick.plays.length === 0) {
       return {
         card: sorted[0]
       };
     }
-    let winningCard = trick.plays[0].card;
+    let winningCard: Card = trick.plays[0].card;
     for (const play of trick.plays) {
-      const card = play.card;
-      const currentTrump = card.suit === roundState.trumpSuit;
-      const winningTrump = winningCard.suit === roundState.trumpSuit;
+      const card: Card = play.card;
+      const currentTrump: boolean = card.suit === roundState.trumpSuit;
+      const winningTrump: boolean = winningCard.suit === roundState.trumpSuit;
       if (currentTrump && !winningTrump) {
         winningCard = card;
         continue;
@@ -34,7 +34,7 @@ export class MediumBot
       }
     }
     // Find smallest card capable of beating winner
-    const winningCards = sorted.filter(
+    const winningCards: Card[] = sorted.filter(
       card => this.beats(card, winningCard, roundState.trumpSuit)
     );
     // play minimum winning card
@@ -52,9 +52,9 @@ export class MediumBot
     candidate: Card,
     currentWinner: Card,
     trumpSuit: Suit | null
-  ) {
-    const candidateTrump = trumpSuit && candidate.suit === trumpSuit;
-    const winnerTrump = trumpSuit && currentWinner.suit === trumpSuit;
+  ): boolean {
+    const candidateTrump: boolean | null = trumpSuit && candidate.suit === trumpSuit;
+    const winnerTrump: boolean | null = trumpSuit && currentWinner.suit === trumpSuit;
     // trump beats non trump
     if (candidateTrump && !winnerTrump) {
       return true;

@@ -5,9 +5,17 @@ import { PlayerFactory } from "../factories/PlayerFactory";
 import { TrickFactory } from "../factories/TrickFactory";
 import { RoundState } from "../domain/round/RoundState";
 import { LegalMoveGenerator } from "../rules/LegalMoveGenerator";
+import { Player } from "../core/Player";
+import { Trick } from "../domain/trick/Trick";
+import { Card } from "../core/Card";
+import { EasyBot } from "../bots/strategies/EasyBot";
+import { HardBot } from "../bots/strategies/HardBot";
+import { MediumBot } from "../bots/strategies/MediumBot";
+import { BotDecision } from "../bots/BotDecision";
+import { PlayedCard } from "../domain/trick/PlayedCard";
 
 
-const players = PlayerFactory.createPlayers("hard");
+const players: Player[] = PlayerFactory.createPlayers("hard");
 
 const roundState: RoundState = {
     roundNumber: 1,
@@ -16,7 +24,7 @@ const roundState: RoundState = {
     trumpDeclared: false,
 };
 
-const trick = TrickFactory.create(1);
+const trick: Trick = TrickFactory.create(1);
 
 console.log("===== PLAYERS =====");
 
@@ -31,23 +39,23 @@ console.log("\n===== PLAYING =====");
 
 for (const player of players) {
 
-    const legalCards =
+    const legalCards: Card[] =
         LegalMoveGenerator.getLegalCards(
             player,
             trick
         );
 
-    const bot =
+    const bot: EasyBot | MediumBot | HardBot =
         BotFactory.create("medium");
 
-    const decision =
+    const decision: BotDecision =
         bot.chooseCard(
             player,
             legalCards,
             trick,
             roundState
         );
-    const card = decision.card;
+    const card: Card = decision.card;
     console.log(
         `${player.name} played`,
         card
@@ -69,7 +77,7 @@ console.log("\n===== TRUMP =====");
 
 console.log(roundState.trumpSuit);
 
-const winner =
+const winner: PlayedCard =
     WinnerResolver.resolve(
         trick,
         roundState

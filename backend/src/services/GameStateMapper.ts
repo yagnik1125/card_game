@@ -1,9 +1,9 @@
-import { GameSession } from "trump-and-twist-game-engine";
+import { GameSession, GameState } from "trump-and-twist-game-engine";
 import { GameStateResponse } from "../types/GameStateResponse";
 
 export class GameStateMapper {
     static map(session: GameSession): GameStateResponse {
-        const state = session.gameState!;
+        const state: GameState = session.gameState!;
         return {
             gameId: session.gameId,
             completed: state.completed,

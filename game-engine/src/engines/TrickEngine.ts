@@ -13,7 +13,7 @@ export class TrickEngine {
     if (!trick.leadSuit) {
       return true;
     }
-    const hasLeadSuit = player.hand.some(c => c.suit === trick.leadSuit);
+    const hasLeadSuit: boolean = player.hand.some(c => c.suit === trick.leadSuit);
     if (!hasLeadSuit) {
       return true;
     }
@@ -24,8 +24,8 @@ export class TrickEngine {
     player: Player,
     card: Card,
     roundState: RoundState
-  ) {
-    const valid = this.validatePlay(trick, player, card);
+  ): void {
+    const valid: boolean = this.validatePlay(trick, player, card);
     if (!valid) {
       throw new Error("Must follow suit");
     }

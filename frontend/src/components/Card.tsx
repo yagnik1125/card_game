@@ -8,15 +8,13 @@ interface Props {
 }
 
 export default function Card({ card, disabled, trumpSuit, onClick }: Props) {
-    const red = card.suit === "HEARTS" || card.suit === "DIAMONDS";
-    const bgClass =
-        disabled
-            ? card.suit === trumpSuit
-                ? "bg-green-700"
-                : "bg-gray-400"
-            : card.suit === trumpSuit
-                ? "bg-green-400"
-                : "bg-white";
+    const bgClass = disabled
+        ? card.suit === trumpSuit
+            ? "bg-green-700"
+            : "bg-gray-400"
+        : card.suit === trumpSuit
+            ? "bg-green-400"
+            : "bg-white";
 
     return (
         <button
@@ -35,18 +33,32 @@ export default function Card({ card, disabled, trumpSuit, onClick }: Props) {
                 flex-col
                 justify-between
                 ${bgClass}
-                ${disabled ? "cursor-not-allowed" : "cursor-pointer -translate-y-2"}
+                ${disabled ? "cursor-not-allowed blur-[0.5px]" : "cursor-pointer -translate-y-2"}
             `}
         >
-            <div className={`font-bold text-[0.8em] self-start ${red ? "text-red-600" : "text-black"}`}>
-                {rankText(card.rank)}
-            </div>
-
-            <div className={`text-[3.2em] leading-none text-center ${red ? "text-red-600" : "text-black"}`}>
+            {/* subtle suit watermark */}
+            <div className="
+                absolute
+                inset-0
+                flex
+                items-center
+                justify-center
+                text-[4rem]
+                opacity-[0.16]
+                pointer-events-none
+            ">
                 {suitMap[card.suit]}
             </div>
 
-            <div className={`font-bold text-[0.8em] self-end ${red ? "text-red-600" : "text-black"}`}>
+            <div className={`font-bold text-[0.8em] self-start`}>
+                {rankText(card.rank)}
+            </div>
+
+            <div className={`text-[3em] leading-none text-center`}>
+                {suitMap[card.suit]}
+            </div>
+
+            <div className={`font-bold text-[0.8em] self-end rotate-180`}>
                 {rankText(card.rank)}
             </div>
         </button>

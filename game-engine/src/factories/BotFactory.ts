@@ -9,7 +9,7 @@ export class BotFactory {
       | "easy"
       | "medium"
       | "hard"
-  ) {
+  ): EasyBot | MediumBot | HardBot {
 
     switch (difficulty) {
 

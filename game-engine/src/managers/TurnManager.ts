@@ -5,13 +5,13 @@ export class TurnManager {
     players: Player[],
     leaderId: string
   ): Player[] {
-    const leaderIndex =players.findIndex(p => p.id === leaderId);
+    const leaderIndex: number = players.findIndex(p => p.id === leaderId);
     const order: Player[] = [];
-    for (let i = 0; i < players.length; i++) {
+    for (let i: number = 0; i < players.length; i++) {
       order.push(
         players[
-          (leaderIndex + i)
-          % players.length
+        (leaderIndex + i)
+        % players.length
         ]
       );
     }

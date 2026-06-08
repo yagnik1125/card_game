@@ -1,5 +1,7 @@
 import { Player } from "../core/Player";
+import { Match } from "../domain/match/Match";
 import { GameSessionFactory } from "../factories/GameSessionFactory";
+import { GameSession } from "../session/GameSession";
 import { GameSessionManager } from "../session/GameSessionManager";
 import { MatchLifecycleService } from "./MatchLifecycleService";
 import { RoundLifecycleService } from "./RoundLifecycleService";
@@ -8,10 +10,10 @@ export class GameBootstrapService {
     static createGame(
         players: Player[],
         totalRounds: number,
-    ) {
-        const match = MatchLifecycleService.createMatch(players, totalRounds);
+    ): GameSession {
+        const match: Match = MatchLifecycleService.createMatch(players, totalRounds);
         const { round, firstTrick } = RoundLifecycleService.startRound(players, 1, null);
-        const session = GameSessionFactory.create(match);
+        const session: GameSession = GameSessionFactory.create(match);
         session.gameState = {
             currentRound: round,
             currentTrick: firstTrick,

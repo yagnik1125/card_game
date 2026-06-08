@@ -1,3 +1,4 @@
+// unused
 import Avatar from "react-avatar";
 
 interface Props {

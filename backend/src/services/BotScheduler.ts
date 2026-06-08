@@ -1,6 +1,9 @@
 import {
+    Card,
+    GameSession,
     GameSessionManager,
-    PlayCardService
+    PlayCardService,
+    Player
 } from "trump-and-twist-game-engine";
 
 import { GameEventEmitter } from "../websocket/GameEventEmitter";
@@ -8,20 +11,20 @@ import { GameEventEmitter } from "../websocket/GameEventEmitter";
 export class BotScheduler {
     static executeNextBot(
         gameId: string
-    ) {
-        const session = GameSessionManager.get(gameId);
-        const currentPlayerId = session.gameState?.turnState.currentPlayerId;
+    ): void {
+        const session: GameSession = GameSessionManager.get(gameId);
+        const currentPlayerId: string | undefined = session.gameState?.turnState.currentPlayerId;
         if (!currentPlayerId) {
             return;
         }
-        const player = session.match.players.find(p => p.id === currentPlayerId);
+        const player: Player | undefined = session.match.players.find(p => p.id === currentPlayerId);
         if (!player) {
             return;
         }
         if (player.id === "P1") {
             return;
         }
-        const card = player.hand[0];
+        const card: Card = player.hand[0];
         if (!card) {
             return;
         }
@@ -35,7 +38,7 @@ export class BotScheduler {
                 rank: card.rank
             }
         );
-        const updated = GameSessionManager.get(gameId);
+        const updated: GameSession = GameSessionManager.get(gameId);
         GameEventEmitter.turnChanged(
             gameId,
             {

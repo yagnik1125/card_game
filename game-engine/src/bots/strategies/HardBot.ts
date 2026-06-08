@@ -4,7 +4,8 @@ import { BotStrategy } from "../BotStrategy";
 import { BotDecision } from "../BotDecision";
 import { RoundState } from "../../domain/round/RoundState";
 import { Trick } from "../../domain/trick/Trick";
-import { Suit } from "../../core/enums";
+import { Rank, Suit } from "../../core/enums";
+import { PlayedCard } from "../../domain/trick/PlayedCard";
 
 export class HardBot implements BotStrategy {
   chooseCard(
@@ -13,10 +14,10 @@ export class HardBot implements BotStrategy {
     trick: Trick,
     roundState: RoundState
   ): BotDecision {
-    const trump = roundState.trumpSuit;
-    const sorted = [...legalCards].sort((a, b) => this.cardValue(a, trump) - this.cardValue(b, trump));
+    const trump: Suit | null = roundState.trumpSuit;
+    const sorted: Card[] = [...legalCards].sort((a, b) => this.cardValue(a, trump) - this.cardValue(b, trump));
     if (trick.plays.length === 0) {
-      const nonTrumpHigh = sorted.filter(c => c.suit !== trump && c.rank >= 11).sort((a, b) => b.rank - a.rank);
+      const nonTrumpHigh: Card[] = sorted.filter(c => c.suit !== trump && c.rank >= 11).sort((a, b) => b.rank - a.rank);
       if (nonTrumpHigh.length) {
         return {
           card: nonTrumpHigh[0]
@@ -26,15 +27,15 @@ export class HardBot implements BotStrategy {
         card: sorted[0]
       };
     }
-    const currentWinner = this.getCurrentWinner(trick, trump);
-    const winners = sorted.filter(card => this.canBeat(card, currentWinner.card, trick.leadSuit!, trump));
+    const currentWinner: PlayedCard = this.getCurrentWinner(trick, trump);
+    const winners: Card[] = sorted.filter(card => this.canBeat(card, currentWinner.card, trick.leadSuit!, trump));
     if (winners.length) {
-      const nonTrumpWinner = winners.find(c => c.suit !== trump);
+      const nonTrumpWinner: Card | undefined = winners.find(c => c.suit !== trump);
       return {
         card: nonTrumpWinner ?? winners[0]
       };
     }
-    const discard = sorted.filter(c => c.suit !== trump && c.rank < 11).sort((a, b) => a.rank - b.rank)[0];
+    const discard: Card = sorted.filter(c => c.suit !== trump && c.rank < 11).sort((a, b) => a.rank - b.rank)[0];
 
     return {
       card: discard ?? sorted[0]
@@ -44,8 +45,8 @@ export class HardBot implements BotStrategy {
   private cardValue(
     card: Card,
     trump: Suit | null
-  ) {
-    let value = card.rank;
+  ): Rank {
+    let value: Rank = card.rank;
     if (trump && card.suit === trump) {
       value += 100;
     }
@@ -55,8 +56,8 @@ export class HardBot implements BotStrategy {
   private getCurrentWinner(
     trick: Trick,
     trump: Suit | null
-  ) {
-    let winner = trick.plays[0];
+  ): PlayedCard {
+    let winner: PlayedCard = trick.plays[0];
     for (const play of trick.plays.slice(1)) {
       if (this.canBeat(play.card, winner.card, trick.leadSuit!, trump)) {
         winner = play;
@@ -70,9 +71,9 @@ export class HardBot implements BotStrategy {
     winner: Card,
     leadSuit: Suit,
     trump: Suit | null
-  ) {
-    const challengerTrump = challenger.suit === trump;
-    const winnerTrump = winner.suit === trump;
+  ): boolean {
+    const challengerTrump: boolean = challenger.suit === trump;
+    const winnerTrump: boolean = winner.suit === trump;
     if (challengerTrump && !winnerTrump) {
       return true;
     }

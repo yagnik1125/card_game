@@ -5,18 +5,24 @@ import {
     LegalMoveGenerator,
     PlayCardService,
     PlayerFactory,
+    GameSession,
+    Card,
+    Player,
+    GameState,
+    Suit,
 } from "trump-and-twist-game-engine";
 import { GameStateMapper } from "./GameStateMapper";
 import { GameEvent } from "../types/GameEvent";
 import { PlayTurnResponse } from "../types/PlayTurnResponse";
+import { GameStateResponse } from "../types/GameStateResponse";
 
 export class GameService {
-    static createGame(numberOfRounds: number, difficulty: "easy" | "medium" | "hard") {
+    static createGame(numberOfRounds: number, difficulty: "easy" | "medium" | "hard"): GameSession {
         const players = PlayerFactory.createPlayers(difficulty);
         return GameBootstrapService.createGame(players, numberOfRounds);
     }
 
-    static getGame(gameId: string) {
+    static getGame(gameId: string): GameSession {
         return GameSessionManager.get(gameId);
     }
 
@@ -56,14 +62,14 @@ export class GameService {
     static getLegalMoves(
         gameId: string,
         playerId: string
-    ) {
-        const session = GameSessionManager.get(gameId);
+    ): Card[] {
+        const session: GameSession = GameSessionManager.get(gameId);
         if (!session.gameState) {
             throw new Error(
                 "Game not initialized"
             );
         }
-        const player = session.match.players.find(p => p.id === playerId);
+        const player: Player | undefined = session.match.players.find(p => p.id === playerId);
         if (!player) {
             throw new Error(
                 "Player not found"
@@ -73,7 +79,7 @@ export class GameService {
     }
 
     static getTurn(gameId: string) {
-        const session = GameSessionManager.get(gameId);
+        const session: GameSession = GameSessionManager.get(gameId);
         return {
             currentPlayerId: session.gameState?.turnState.currentPlayerId,
             turnNumber: session.gameState?.turnState.turnNumber
@@ -82,7 +88,7 @@ export class GameService {
 
     static getGameState(
         gameId: string
-    ) {
+    ): GameStateResponse {
         const session = GameSessionManager.get(gameId);
         return GameStateMapper.map(session);
     }
@@ -91,8 +97,8 @@ export class GameService {
         gameId: string,
         playerId: string
     ) {
-        const session = GameSessionManager.get(gameId);
-        const player = session.match.players.find(p => p.id === playerId);
+        const session: GameSession = GameSessionManager.get(gameId);
+        const player: Player | undefined = session.match.players.find(p => p.id === playerId);
         if (!player) {
             throw new Error(
                 "Player not found"
@@ -107,10 +113,10 @@ export class GameService {
     static getView(
         gameId: string
     ) {
-        const session = GameSessionManager.get(gameId);
-        const state = session.gameState!;
-        const human = session.match.players.find(p => p.id === "P1")!;
-        const legal = LegalMoveGenerator.getLegalCards(human, state.currentTrick);
+        const session: GameSession = GameSessionManager.get(gameId);
+        const state: GameState = session.gameState!;
+        const human: Player = session.match.players.find(p => p.id === "P1")!;
+        const legal: Card[] = LegalMoveGenerator.getLegalCards(human, state.currentTrick);
         return {
             gameId: session.gameId,
             completed: state.completed,
@@ -138,26 +144,26 @@ export class GameService {
         playerId: string,
         cardId: string
     ): PlayTurnResponse {
-        const session = GameSessionManager.get(gameId);
+        const session: GameSession = GameSessionManager.get(gameId);
 
         if (!session.gameState) {
             throw new Error("Game not initialized");
         }
-        const player = session.match.players.find(p => p.id === playerId);
+        const player: Player | undefined = session.match.players.find(p => p.id === playerId);
 
         if (!player) {
             throw new Error("Player not found");
         }
 
-        const legalCards = LegalMoveGenerator.getLegalCards(player, session.gameState.currentTrick);
+        const legalCards: Card[] = LegalMoveGenerator.getLegalCards(player, session.gameState.currentTrick);
 
-        const isLegal = legalCards.some(card => card.id === cardId);
+        const isLegal: boolean = legalCards.some(card => card.id === cardId);
 
         if (!isLegal) {
             throw new Error("Illegal move");
         }
 
-        const card = player.hand.find(c => c.id === cardId);
+        const card: Card | undefined = player.hand.find(c => c.id === cardId);
 
         if (!card) {
             throw new Error("Card not found");
@@ -165,12 +171,20 @@ export class GameService {
 
         const events: GameEvent[] = [];
 
-        const trickBefore = session.gameState.currentTrick.trickNumber;
-        const roundBefore = session.gameState.currentRound.state.roundNumber;
-        const matchBefore = session.gameState.completed;
-
+        const trickBefore: number = session.gameState.currentTrick.trickNumber;
+        const roundBefore: number = session.gameState.currentRound.state.roundNumber;
+        const matchBefore: boolean = session.gameState.completed;
+        const trumpSuitBefore: Suit | null = session.gameState!.currentRound.state.trumpSuit;
+        
         PlayCardService.playCard(gameId, playerId, card);
-
+        const afterHuman: GameSession = GameSessionManager.get(gameId);
+        const trumpSuitAfter: Suit | null = afterHuman.gameState!.currentRound.state.trumpSuit;
+        if (!trumpSuitBefore && trumpSuitAfter) {
+            events.push({
+                type: "TRUMP_DECLARED",
+                playerId
+            });
+        }
         events.push({
             type: "CARD_PLAYED",
             playerId,
@@ -179,18 +193,9 @@ export class GameService {
             rank: card.rank
         });
 
-        const afterHuman = GameSessionManager.get(gameId);
-        const trickCompleted =
-            afterHuman.gameState!.currentTrick.trickNumber !==
-            trickBefore;
-
-        const roundCompleted =
-            afterHuman.gameState!.currentRound.state.roundNumber !==
-            roundBefore;
-
-        const matchCompleted =
-            !matchBefore &&
-            afterHuman.gameState!.completed;
+        const trickCompleted: boolean = afterHuman.gameState!.currentTrick.trickNumber !== trickBefore;
+        const roundCompleted: boolean = afterHuman.gameState!.currentRound.state.roundNumber !== roundBefore;
+        const matchCompleted: boolean = !matchBefore && afterHuman.gameState!.completed;
 
         if (matchCompleted) {
             events.push({
@@ -215,26 +220,9 @@ export class GameService {
             });
         }
 
-        const botEvents = BotTurnService.executeAllBots(afterHuman);
+        const botEvents: GameEvent[] = BotTurnService.executeAllBots(afterHuman);
 
         events.push(...botEvents);
-
-        // const updated = GameSessionManager.get(gameId);
-        // if (roundNumberAfter !== roundNumberBefore) {
-        //     events.push({
-        //         type: "ROUND_COMPLETED",
-        //         roundNumber: roundNumberAfter || 0
-        //     });
-        // }
-        // if (updated.gameState?.completed) {
-        //     events.push({
-        //         type: "MATCH_COMPLETED", winner: updated.match.result?.winnerPlayerId
-        //     });
-        // }
-        // events.push({
-        //     type: "TURN_CHANGED",
-        //     currentPlayerId: updated.gameState?.turnState.currentPlayerId || ""
-        // });
 
         return {
             events,

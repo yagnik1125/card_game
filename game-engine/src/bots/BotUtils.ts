@@ -18,8 +18,8 @@ export class BotUtils {
                 "No cards supplied"
             );
         }
-        let bestSuit = cards[0].suit;
-        let bestScore = 0;
+        let bestSuit: Suit = cards[0].suit;
+        let bestScore: number = 0;
         for (const [suit, score] of counts) {
             if (score > bestScore) {
                 bestSuit = suit;

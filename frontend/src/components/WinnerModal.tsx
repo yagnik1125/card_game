@@ -1,3 +1,4 @@
+import { removeGame } from "@/api/gameApi";
 import { setSnapshot, setWinner, setTrickCards, setAnimating, setDealing } from "@/store/slices/gameSlice";
 import {
     Trophy,
@@ -13,20 +14,22 @@ import {
 
 interface Props {
     winner: any;
+    gameId: any;
 }
 
 export default function WinnerModal({
     winner,
+    gameId,
 }: Props) {
     const dispatch = useDispatch();
-    const navigate =
-        useNavigate();
+    const navigate = useNavigate();
 
     if (!winner) {
         return null;
     }
 
-    const closeModal = () => {
+    const closeModal = async () => {
+        await removeGame(gameId);
         dispatch(setSnapshot(null));
         dispatch(setWinner(null));
         dispatch(setTrickCards([]));
@@ -35,18 +38,10 @@ export default function WinnerModal({
         navigate("/");
     };
 
-    const sortedPlayers =
-        [...winner.players].sort(
-            (a, b) =>
-                b.totalTricks -
-                a.totalTricks
-        );
-
-    const matchWinner =
-        sortedPlayers[0];
+    const sortedPlayers = [...winner.players].sort((a, b) => b.totalTricks - a.totalTricks);
+    const matchWinner = sortedPlayers[0];
 
     return (
-
         <div className="
             fixed
             inset-0
@@ -58,7 +53,6 @@ export default function WinnerModal({
             justify-center
             p-3
         ">
-
             <div className="
                 relative
                 w-full
@@ -79,7 +73,7 @@ export default function WinnerModal({
                 {/* Close */}
 
                 <button
-                    onClick={() => closeModal}
+                    onClick={closeModal}
                     className="
                         absolute
                         top-3
@@ -100,7 +94,6 @@ export default function WinnerModal({
                     <X size={18} />
                 </button>
 
-
                 {/* Scroll Area */}
 
                 <div className="
@@ -119,7 +112,6 @@ export default function WinnerModal({
                         border-b
                         border-white/10
                     ">
-
                         <div className="
                             mx-auto
                             mb-4
@@ -132,14 +124,11 @@ export default function WinnerModal({
                             justify-center
                             shadow-xl
                         ">
-
                             <Trophy
                                 size={42}
                                 className="text-black"
                             />
-
                         </div>
-
                         <div className="
                             text-green-400
                             font-bold
@@ -149,7 +138,6 @@ export default function WinnerModal({
                         ">
                             Match Complete
                         </div>
-
                         <h1 className="
                             text-3xl
                             font-black
@@ -161,7 +149,6 @@ export default function WinnerModal({
                                 : `${matchWinner.name} Wins`
                             }
                         </h1>
-
                         <div className="
                             mt-3
                             text-slate-400
@@ -169,7 +156,6 @@ export default function WinnerModal({
                         ">
                             Total Tricks Won
                         </div>
-
                         <div className="
                             text-4xl
                             font-black
@@ -177,9 +163,7 @@ export default function WinnerModal({
                         ">
                             {matchWinner.totalTricks}
                         </div>
-
                     </div>
-
 
                     {/* Leaderboard */}
 
@@ -187,54 +171,37 @@ export default function WinnerModal({
                         p-5
                         space-y-3
                     ">
-
-                        {sortedPlayers.map(
-                            (
-                                player,
-                                index
-                            ) => (
-
-                                <div
-                                    key={player.id}
-
-                                    className={`
-                                        rounded-2xl
-                                        px-4
-                                        py-3
-                                        border
-                                        flex
-                                        items-center
-                                        justify-between
-
-                                        ${player.id === matchWinner.id
-                                            ? `
-                                            border-yellow-400/30
-                                            bg-yellow-500/10
-                                            `
-                                            : `
-                                            border-white/10
-                                            bg-white/5
-                                            `
-                                        }
-                                    `}
-                                >
-
-                                    <div className="
+                        {sortedPlayers.map((player, index) => (
+                            <div
+                                key={player.id}
+                                className={`
+                                    rounded-2xl
+                                    px-4
+                                    py-3
+                                    border
+                                    flex
+                                    items-center
+                                    justify-between
+                                    ${player.id === matchWinner.id
+                                        ? `border-yellow-400/30 bg-yellow-500/10`
+                                        : `border-white/10 bg-white/5`
+                                    }
+                            `}
+                            >
+                                <div className="
                                         flex
                                         items-center
                                         gap-3
                                     ">
-
-                                        <div className="
+                                    <div className="
                                             w-6
                                             text-slate-500
                                             font-bold
                                         ">
-                                            #
-                                            {index + 1}
-                                        </div>
-
-                                        <div className="
+                                        #
+                                        {index + 1}
+                                    </div>
+                                    <div className="
                                             w-11
                                             h-11
                                             rounded-full
@@ -245,72 +212,56 @@ export default function WinnerModal({
                                             text-white
                                             font-bold
                                         ">
-                                            {player.id === "P1"
-                                                ? "Y"
-                                                : player.name[0]
-                                            }
-                                        </div>
-
-                                        <div>
-
-                                            <div className="
+                                        {player.id === "P1"
+                                            ? "Y"
+                                            : player.name[0]
+                                        }
+                                    </div>
+                                    <div>
+                                        <div className="
                                                 text-white
                                                 font-bold
                                                 flex
                                                 items-center
                                                 gap-2
                                             ">
-
-                                                {player.id === "P1"
-                                                    ? "You"
-                                                    : player.name
-                                                }
-
-                                                {player.id === matchWinner.id &&
-                                                    <Crown
-                                                        size={16}
-                                                        className="
+                                            {player.id === "P1"
+                                                ? "You"
+                                                : player.name
+                                            }
+                                            {player.id === matchWinner.id &&
+                                                <Crown
+                                                    size={16}
+                                                    className="
                                                             text-yellow-400
                                                         "
-                                                    />
-                                                }
-
-                                            </div>
-
+                                                />
+                                            }
                                         </div>
-
                                     </div>
-
-                                    <div className="
+                                </div>
+                                <div className="
                                         text-right
                                     ">
-
-                                        <div className="
+                                    <div className="
                                             text-xl
                                             font-black
                                             text-white
                                         ">
-                                            {player.totalTricks}
-                                        </div>
-
-                                        <div className="
+                                        {player.totalTricks}
+                                    </div>
+                                    <div className="
                                             text-xs
                                             text-slate-400
                                         ">
-                                            tricks
-                                        </div>
-
+                                        tricks
                                     </div>
-
                                 </div>
-
-                            )
+                            </div>
+                        )
                         )}
-
                     </div>
-
                 </div>
-
 
                 {/* Footer */}
 
@@ -319,10 +270,8 @@ export default function WinnerModal({
                     border-white/10
                     p-4
                 ">
-
                     <button
-                        onClick={() => closeModal}
-
+                        onClick={closeModal}
                         className="
                             w-full
                             h-13
@@ -340,18 +289,11 @@ export default function WinnerModal({
                             transition-all
                         "
                     >
-
                         <Home size={20} />
-
                         Back To Home
-
                     </button>
-
                 </div>
-
             </div>
-
         </div>
-
     );
 }

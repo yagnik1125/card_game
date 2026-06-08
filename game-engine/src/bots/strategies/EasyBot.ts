@@ -15,7 +15,7 @@ export class EasyBot
     roundState: RoundState
   ): BotDecision {
 
-    const randomIndex =
+    const randomIndex: number =
       Math.floor(
         Math.random() *
         legalCards.length

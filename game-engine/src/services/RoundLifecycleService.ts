@@ -18,8 +18,8 @@ export class RoundLifecycleService {
         PlayerManager.resetRoundStats(players);
         PlayerManager.clearHands(players);
         DeckManager.dealCards(players);
-        const round =RoundFactory.create(roundNumber,championPlayerId);
-        const trick =TrickFactory.create(1);
+        const round: Round = RoundFactory.create(roundNumber, championPlayerId);
+        const trick: Trick = TrickFactory.create(1);
         return {
             round,
             firstTrick: trick

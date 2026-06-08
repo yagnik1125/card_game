@@ -6,7 +6,7 @@ export class SessionManager {
         SessionStore.create(session);
     }
     static get(gameId: string): GameSession {
-        const session = SessionStore.get(gameId);
+        const session: GameSession | undefined = SessionStore.get(gameId);
         if (!session) {
             throw new Error(
                 "Game session not found"

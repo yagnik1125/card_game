@@ -9,9 +9,9 @@ export class Deck {
   }
 
   private build(): void {
-    const suits = Object.values(Suit);
+    const suits: Suit[] = Object.values(Suit);
 
-    const ranks = Object.values(Rank).filter(value => typeof value === "number");
+    const ranks: Rank[] = Object.values(Rank).filter(value => typeof value === "number");
 
     let id: number = 1;
 
@@ -27,8 +27,8 @@ export class Deck {
   }
 
   shuffle(): void {
-    for (let i = this.cards.length - 1; i > 0; i--) {
-      const j = Math.floor(
+    for (let i: number = this.cards.length - 1; i > 0; i--) {
+      const j: number = Math.floor(
         Math.random() * (i + 1)
       );
 
@@ -36,7 +36,7 @@ export class Deck {
     }
   }
 
-  deal(players: number = 4) {
+  deal(players: number = 4): Card[][] {
     const hands: Card[][] = Array.from(
       { length: players },
       () => []

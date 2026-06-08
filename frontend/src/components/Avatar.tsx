@@ -1,3 +1,9 @@
+import {
+    Crown,
+    User,
+    Bot
+} from "lucide-react";
+
 interface Props {
     player: any;
     champion: boolean;
@@ -7,72 +13,128 @@ interface Props {
 export default function Avatar({
     player,
     champion,
-    active
+    active,
 }: Props) {
-    if (!player) {
-        return null;
-    }
+    if (!player) return null;
+
+    const isHuman = player.id === "P1";
+
     return (
-        <div className="
-            flex
-            flex-col
-            items-center
-            text-white
-            relative
-        ">
+        <div className="flex flex-col items-center text-white relative select-none">
+
+            {/* Champion Badge */}
             {champion && (
                 <div className="
                     absolute
-                    -top-1
+                    z-20
                     -left-2
-                    w-[clamp(1.5rem,4vw,1.5rem)]
-                    h-[clamp(1.5rem,4vw,1.5rem)]
-                    text-[clamp(1.2rem,1vw,.9rem)]
-                    rounded-full
+                    bg-yellow-400
                     text-black
+                    rounded-full
+                    p-[clamp(0.2rem,0.8vw,0.35rem)]
+                    shadow-lg
+                    border border-yellow-200
+                ">
+                    <Crown
+                        size={clampIcon(0.9, 1.2, 1.4)*10}
+                        className="drop-shadow-sm"
+                    />
+                </div>
+            )}
+
+            {/* Avatar Ring Wrapper */}
+            <div
+                className={`
+                    relative
+                    rounded-full
+                    flex
+                    items-center
+                    justify-center
+                    transition-all
+                    duration-300
+
+                    w-[clamp(2.8rem,6vw,4.5rem)]
+                    h-[clamp(2.8rem,6vw,4.5rem)]
+
+                    ${active
+                        ? "bg-yellow-400/20 ring-2 ring-yellow-400 shadow-lg shadow-yellow-400/30"
+                        : "bg-white/10 ring-1 ring-white/10"
+                    }
+                `}
+            >
+                {/* Inner Avatar */}
+                <div className={`
+                    w-[85%]
+                    h-[85%]
+                    rounded-full
                     flex
                     items-center
                     justify-center
                     font-bold
-                ">
-                    👑
+                    text-[clamp(0.9rem,2vw,1.2rem)]
+                    transition-all
+
+                    ${active
+                        ? "bg-yellow-400 text-black"
+                        : "bg-linear-to-br from-pink-600 to-purple-700 text-white"
+                    }
+                `}>
+                    {isHuman
+                        ? <User size={clampIcon(1, 1.3, 1.6)*30} />
+                        : <Bot size={clampIcon(1, 1.3, 1.6)*30} />
+                    }
                 </div>
-            )}
-            <div className={`
-                w-[clamp(2rem,5vw,5rem)]
-                h-[clamp(2rem,5vw,5rem)]
-                rounded-full
-                flex
-                items-center
-                justify-center
-                text-2xl
-                border
-                ${active?"bg-yellow-400 text-black":"bg-pink-700"}
-                transition-all
-            `}>
-                {player.id === "P1" ? "Y" : player?.name?.[0] ?? '?'}
+
+                {/* Online Pulse (for active player) */}
+                {active && (
+                    <span className="
+                        absolute
+                        bottom-0
+                        right-0
+                        w-3
+                        h-3
+                        rounded-full
+                        bg-green-400
+                        ring-2
+                        ring-black
+                        animate-pulse
+                    " />
+                )}
             </div>
+
+            {/* Trick Counter */}
             <div className="
                 absolute
                 -top-1
                 -right-2
-                border
-                w-[clamp(1.5rem,2vw,1.5rem)]
-                h-[clamp(1.5rem,2vw,1.5rem)]
-                text-[clamp(.65rem,1vw,.9rem)]
+                bg-black/70
+                backdrop-blur-md
+                border border-white/10
+                text-white
                 rounded-full
-                bg-yellow-400
-                text-black
-                flex
-                items-center
-                justify-center
+                px-2
+                py-0.5
+                text-[clamp(0.6rem,1vw,0.75rem)]
                 font-bold
+                shadow-md
             ">
                 {player.tricksWonRound}
             </div>
-            <div className="font-bold text-lg">
-                {player.id === "P1" ? "You" : player.name}
+
+            {/* Name */}
+            <div className="
+                text-center
+                font-semibold
+                text-[clamp(0.75rem,1.2vw,1rem)]
+                tracking-wide
+                text-white/90
+            ">
+                {isHuman ? "You" : player.name}
             </div>
         </div>
-    )
+    );
+}
+
+function clampIcon(min: number, mid: number, max: number): number {
+    return Math.min(max, Math.max(min, mid));
 }

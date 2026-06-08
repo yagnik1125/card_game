@@ -2,7 +2,7 @@ import { SessionStore } from "./SessionStore";
 import { GameSession } from "./GameSession";
 
 export class GameSessionManager {
-    static create(session: GameSession) {
+    static create(session: GameSession):void {
         SessionStore.create(
             session
         );
@@ -19,7 +19,7 @@ export class GameSessionManager {
     static save(session: GameSession) {
         SessionStore.create(session);
     }
-    static remove(gameId: string) {
+    static remove(gameId: string) :void{
         SessionStore.remove(gameId);
     }
 }

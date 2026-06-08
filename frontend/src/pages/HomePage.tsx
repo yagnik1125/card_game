@@ -6,49 +6,23 @@ import { createGame } from "@/api/gameApi";
 type Difficulty = | "easy" | "medium" | "hard";
 
 export default function HomePage() {
-    const navigate =
-        useNavigate();
-
-    const [rounds, setRounds] =
-        useState(3);
-
-    const [difficulty, setDifficulty] =
-        useState<Difficulty>(
-            "medium"
-        );
-
-    const [creating, setCreating] =
-        useState(false);
+    const navigate = useNavigate();
+    const [rounds, setRounds] = useState(3);
+    const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+    const [creating, setCreating] = useState(false);
 
     const create = async () => {
-
         try {
-
-            setCreating(
-                true
-            );
-
-            const result =
-                await createGame(
-                    rounds,
-                    difficulty
-                );
-
-            navigate(
-                `/game/${result.gameId}`
-            );
+            setCreating(true);
+            const result = await createGame(rounds, difficulty);
+            navigate(`/game/${result.gameId}`);
         }
-
         finally {
-
-            setCreating(
-                false
-            );
+            setCreating(false);
         }
     };
 
     return (
-
         <div className="
             min-h-screen
             bg-linear-to-br
@@ -60,7 +34,6 @@ export default function HomePage() {
             justify-center
             px-4
         ">
-
             <div className="
                 w-full
                 max-w-xl
@@ -79,14 +52,12 @@ export default function HomePage() {
                     text-center
                     mb-10
                 ">
-
                     <div className="
                         text-7xl
                         mb-4
                     ">
                         ♠️ ♥️ ♣️ ♦️
                     </div>
-
                     <h1 className="
                         text-5xl
                         font-black
@@ -94,7 +65,6 @@ export default function HomePage() {
                     ">
                         Trump & Twist
                     </h1>
-
                     <p className="
                         mt-3
                         text-slate-400
@@ -103,13 +73,11 @@ export default function HomePage() {
                         Win tricks.
                         Become champion.
                     </p>
-
                 </div>
 
                 {/* ROUND SELECT */}
 
                 <div className="mb-10">
-
                     <div className="
                         text-white
                         font-semibold
@@ -117,67 +85,38 @@ export default function HomePage() {
                     ">
                         Number Of Rounds
                     </div>
-
                     <div className="
                         grid
                         grid-cols-5
                         gap-3
                     ">
-
                         {[1, 2, 3, 4, 5].map(
                             round => (
-
                                 <button
                                     key={round}
-
-                                    onClick={() =>
-                                        setRounds(
-                                            round
-                                        )
-                                    }
-
+                                    onClick={() => setRounds(round)}
                                     className={`
                                         h-14
                                         rounded-xl
                                         font-bold
                                         cursor-pointer
                                         transition-all
-
                                         ${rounds === round
-                                            ?
-                                            `
-                                            bg-green-500
-                                            text-black
-                                            scale-105
-                                            shadow-lg
-                                            `
-                                            :
-                                            `
-                                            bg-white/10
-                                            text-white
-                                            hover:bg-white/20
-                                            `
+                                            ? `bg-green-500 text-black scale-105 shadow-lg`
+                                            : `bg-white/10 text-white hover:bg-white/20`
                                         }
                                     `}
                                 >
-
                                     {round}
-
                                 </button>
                             )
                         )}
-
                     </div>
-
                 </div>
-
 
                 {/* DIFFICULTY SELECT */}
 
-                <div className="
-                    mb-10
-                ">
-
+                <div className="mb-10">
                     <div className="
                         text-white
                         font-semibold

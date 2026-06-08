@@ -1,8 +1,9 @@
 import { BotFactory } from "./BotFactory";
 import { Player } from "../core/Player";
+import { PlayerStats } from "../domain/player/PlayerStats";
 
 export class PlayerFactory {
-    private static createStats() {
+    private static createStats(): PlayerStats {
         return {
             tricksWonThisRound: 0,
             totalTricksWon: 0,
