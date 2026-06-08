@@ -50,10 +50,18 @@ export default function GamePage() {
             suit: play.card.suit,
             rank: play.card.rank
         }));
+        // dispatch(setDealing(true));
+        // await new Promise(r => setTimeout(r, 1500));
+        // dispatch(setTrickCards(trickCards));
         // dispatch(setSnapshot(view));
+        // await new Promise(r => requestAnimationFrame(() => r(null)));
+        // dispatch(setDealing(false));
+        // await new Promise(r => setTimeout(r, 1600));
+        await new Promise(r => setTimeout(r, 700));
+        dispatch(setTrickCards(trickCards));
+        await new Promise(r => setTimeout(r, 500));
         dispatch(setDealing(true));
         await new Promise(r => setTimeout(r, 1500));
-        dispatch(setTrickCards(trickCards));
         dispatch(setSnapshot(view));
         await new Promise(r => requestAnimationFrame(() => r(null)));
         dispatch(setDealing(false));

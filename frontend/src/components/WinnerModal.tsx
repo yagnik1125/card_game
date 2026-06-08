@@ -26,6 +26,15 @@ export default function WinnerModal({
         return null;
     }
 
+    const closeModal = () => {
+        dispatch(setSnapshot(null));
+        dispatch(setWinner(null));
+        dispatch(setTrickCards([]));
+        dispatch(setAnimating(false));
+        dispatch(setDealing(false));
+        navigate("/");
+    };
+
     const sortedPlayers =
         [...winner.players].sort(
             (a, b) =>
@@ -70,7 +79,7 @@ export default function WinnerModal({
                 {/* Close */}
 
                 <button
-                    onClick={() => navigate("/")}
+                    onClick={() => closeModal}
                     className="
                         absolute
                         top-3
@@ -312,14 +321,7 @@ export default function WinnerModal({
                 ">
 
                     <button
-                        onClick={() => {
-                            dispatch(setSnapshot(null));
-                            dispatch(setWinner(null));
-                            dispatch(setTrickCards([]));
-                            dispatch(setAnimating(false));
-                            dispatch(setDealing(false));
-                            navigate("/");
-                        }}
+                        onClick={() => closeModal}
 
                         className="
                             w-full
