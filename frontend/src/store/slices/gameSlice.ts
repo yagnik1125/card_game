@@ -9,6 +9,8 @@ interface GameState {
     dealing: boolean;
     loading: boolean;
     winner: any | null;
+    trumpDeclaration: string | null;
+    trickWinner: string | null;
 }
 const initialState: GameState = {
     snapshot: null,
@@ -17,6 +19,8 @@ const initialState: GameState = {
     dealing: false,
     loading: false,
     winner: null,
+    trumpDeclaration: null,
+    trickWinner: null,
 };
 const slice =
     createSlice({
@@ -41,6 +45,12 @@ const slice =
             setDealing(state, action) {
                 state.dealing = action.payload;
             },
+            setTrumpDeclaration(state, action) {
+                state.trumpDeclaration = action.payload;
+            },
+            setTrickWinner(state, action) {
+                state.trickWinner = action.payload;
+            },
         }
     });
 
@@ -51,5 +61,7 @@ export const {
     setWinner,
     setLoading,
     setDealing,
+    setTrumpDeclaration,
+    setTrickWinner,
 } = slice.actions;
 export default slice.reducer;

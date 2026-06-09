@@ -15,3 +15,25 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+@keyframes cardPlay {
+    0% {
+        transform:
+            translate(-50%, 0)
+            scale(1);
+    }
+
+    100% {
+        transform:
+            translate(-50%, -260px)
+            scale(0.85);
+    }
+}
+
+.animate-card-play {
+    animation:
+        cardPlay
+        450ms
+        ease-out
+        forwards;
+}

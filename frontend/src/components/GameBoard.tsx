@@ -14,6 +14,7 @@ import {
 } from "react-router-dom";
 import { setSnapshot, setWinner, setTrickCards, setAnimating, setDealing } from "@/store/slices/gameSlice";
 import { removeGame } from "@/api/gameApi";
+import { BotCards } from "./BotCards";
 
 interface Props {
     onPlay: (cardId: string) => void;
@@ -51,28 +52,92 @@ export default function GameBoard({
 
     const quitGame = async () => {
         // console.log(snapshot.gameId);
-        await removeGame(snapshot.gameId);
+        const gameId = snapshot.gameId;
         dispatch(setSnapshot(null));
         dispatch(setWinner(null));
         dispatch(setTrickCards([]));
         dispatch(setAnimating(false));
         dispatch(setDealing(false));
+        await removeGame(gameId);
         navigate("/");
     };
 
     return (
         <div className="bg-green-900 min-h-screen flex justify-center py-3">
-            <div className="relative w-[98vw] max-w-425 h-[92vh] rounded-3xl border-4 border-green-500 bg-linear-to-b from-green-700 to-green-800 overflow-hidden">
+            <div className="relative w-[98vw] max-w-425 h-[96vh] rounded-3xl border-[6px] border-green-400/40 bg-[#0f5d2d] shadow-[0_0_80px_rgba(0,0,0,0.5)] overflow-hidden">
+                <div
+                    className="
+                        absolute
+                        inset-2
+                        rounded-[22px]
+                        border
+                        border-white/10
+                        pointer-events-none
+                    "
+                />
+                {/* Table Lighting */}
+                <div className="
+                    absolute
+                    inset-0
+                    pointer-events-none
+                    rounded-3xl
+                ">
+                    <div className="absolute inset-0 bg-linear-to-b from-white/5 via-transparent to-black/30" />
+                    <div className="
+                        absolute
+                        left-1/2
+                        top-1/2
+                        -translate-x-1/2
+                        -translate-y-1/2
+                        w-[120%]
+                        h-[120%]
+                        rounded-full
+                        bg-white/5
+                        blur-3xl
+                    "/>
+                    <div className="
+                        absolute
+                        inset-0
+                        bg-radial
+                        from-transparent
+                        via-transparent
+                        to-black/40
+                    "/>
+                </div>
 
                 {/* TopLeft Panel */}
 
                 <div className="absolute left-0 top-0 z-20">
-                    <div className="bg-black/30 backdrop-blur-md rounded-2xl px-4 py-3 text-white border border-white/10">
-                        <div className="text-xs uppercase text-gray-300">
+                    <div
+                        className="
+                            min-w-22
+                            px-5
+                            py-4
+                            rounded-3xl
+                            bg-black/35
+                            backdrop-blur-xl
+                            border
+                            border-white/10
+                            shadow-2xl
+                            shadow-black/40
+                            text-white
+                        "
+                    >
+                        <div className="
+                            text-[10px]
+                            uppercase
+                            tracking-[0.25em]
+                            text-white/60
+                            mb-1
+                        ">
                             Round
                         </div>
 
-                        <div className="text-2xl font-bold">
+                        <div className="
+                            text-4xl
+                            font-black
+                            leading-none
+                        ">
                             {snapshot.roundNumber}
                         </div>
                     </div>
@@ -81,16 +146,42 @@ export default function GameBoard({
                 {/* TopRight  Panel */}
 
                 <div className="absolute right-0 top-0 z-20">
-                    <div className="bg-black/15 backdrop-blur-md rounded-2xl px-4 py-3 text-white border border-white/10">
-                        <div className="text-xs uppercase text-gray-300">
-                            Trump
+                    <div
+                        className="
+                            min-w-22
+                            px-5
+                            py-4
+                            rounded-3xl
+                            bg-black/35
+                            backdrop-blur-xl
+                            border
+                            border-yellow-400/20
+                            shadow-2xl
+                            shadow-yellow-500/10
+                            text-white
+                        "
+                    >
+                        <div className="
+                            text-[10px]
+                            uppercase
+                            tracking-[0.25em]
+                            text-white/60
+                        ">
+                            Trump Suit
                         </div>
 
-                        <div className={`text-3xl font-bold`}>
-                            {snapshot.trumpSuit
-                                ? suitMap[snapshot.trumpSuit]
-                                : "-"
-                            }
+                        <div className="
+                            flex
+                            items-center
+                            justify-center
+                            gap-2
+                        ">
+                            <span className="text-5xl leading-none">
+                                {snapshot.trumpSuit
+                                    ? suitMap[snapshot.trumpSuit]
+                                    : "?"
+                                }
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -98,33 +189,114 @@ export default function GameBoard({
                 {/* BottomRight Panel */}
 
                 <div className="absolute right-0 bottom-0 z-20">
-                    <div className="bg-black/30 backdrop-blur-md rounded-2xl p-3 text-white border border-white/10">
-                        <div className="text-xs uppercase text-gray-300 mb-2">
-                            Total Tricks
+                    <div
+                        className="
+                            w-fit
+                            rounded-3xl
+                            bg-black/35
+                            backdrop-blur-xl
+                            border
+                            border-white/10
+                            shadow-2xl
+                            shadow-black/40
+                            overflow-hidden
+                        "
+                    >
+                        <div
+                            className="
+                                px-2
+                                py-2
+                                border-b
+                                border-white/10
+                                text-white
+                            "
+                        >
+                            <div className="
+                                text-[10px]
+                                uppercase
+                                tracking-[0.25em]
+                                text-white/60
+                            ">
+                                Scoreboard
+                            </div>
+
+                            {/* <div className="
+                                text-lg
+                                font-bold
+                            ">
+                                Total Tricks
+                            </div> */}
                         </div>
 
-                        {snapshot.players.map((p: any) => (
-                            <div
-                                key={p.id}
-                                className="flex justify-between gap-5"
-                            >
-                                <span>
-                                    {p.id === "P1"
-                                        ? "You"
-                                        : p.name}
-                                </span>
+                        <div className="p-1">
+                            {snapshot.players.map((p: any) => (
+                                <div
+                                    key={p.id}
+                                    className="
+                                        flex
+                                        items-center
+                                        justify-between
+                                        py-px
+                                        px-px
+                                        rounded-xl
+                                        text-white
+                                        hover:bg-white/5
+                                        transition-colors
+                                    "
+                                >
+                                    <div className="
+                                        flex
+                                        items-center
+                                        gap-1
+                                    ">
+                                        <div
+                                            className={`
+                                                w-2
+                                                h-2
+                                                rounded-full
+                                                ${p.id === "P1"
+                                                    ? "bg-green-400"
+                                                    : "bg-white/50"
+                                                }
+                                            `}
+                                        />
 
-                                <span className="font-bold">
-                                    {p.totalTricks}
-                                </span>
-                            </div>
-                        ))}
+                                        <span
+                                            className={
+                                                p.id === "P1"
+                                                    ? "font-bold"
+                                                    : ""
+                                            }
+                                        >
+                                            {p.id === "P1"
+                                                ? "You"
+                                                : p.name}
+                                        </span>
+                                    </div>
+
+                                    <div
+                                        className={`
+                                            min-w-8
+                                            text-center
+                                            rounded-lg
+                                            font-black
+                                            ${p.id === "P1" ? "bg-green-400 text-black" : "bg-white/10"}
+                                        `}
+                                    >
+                                        {p.totalTricks}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* Top */}
 
-                <div className="absolute top-[0%] left-1/2 -translate-x-1/2 z-10">
+                <div className="absolute top-[0%] left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+                    {!dealing && <BotCards
+                        count={top.cardsRemaining}
+                    />}
                     <Avatar
                         player={top}
                         champion={snapshot.champion === top.id}
@@ -134,7 +306,11 @@ export default function GameBoard({
 
                 {/* Left */}
 
-                <div className="absolute left-[2%] top-1/2 -translate-y-1/2 z-10">
+                <div className="absolute left-[2%] top-1/2 -translate-y-1/2 z-10 flex items-center gap-3">
+                    {!dealing && <BotCards
+                        count={left.cardsRemaining}
+                        vertical
+                    />}
                     <Avatar
                         player={left}
                         champion={snapshot.champion === left.id}
@@ -144,12 +320,16 @@ export default function GameBoard({
 
                 {/* Right */}
 
-                <div className="absolute right-[2%] top-1/2 -translate-y-1/2 z-10">
+                <div className="absolute right-[2%] top-1/2 -translate-y-1/2 z-10 flex items-center gap-3">
                     <Avatar
                         player={right}
                         champion={snapshot.champion === right.id}
                         active={snapshot.currentPlayerId === right.id}
                     />
+                    {!dealing && <BotCards
+                        count={right.cardsRemaining}
+                        vertical
+                    />}
                 </div>
 
                 {/* Center Deck Shown after round completion */}
@@ -198,37 +378,37 @@ export default function GameBoard({
 
                 {/* Trick Area */}
 
-                <div className="absolute left-1/2 top-[48%] -translate-x-1/2 -translate-y-1/2 w-[70%] h-[60%]">
-                    <div className="absolute inset-0 rounded-full border-4 border-green-400 bg-green-600/20" />
-
+                <div className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-[70%] h-[60%]">
+                    <div className="absolute inset-0 rounded-full border-4 border-white/10 bg-black/10 backdrop-blur-sm shadow-inner shadow-black/50" />
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-white/5 blur-3xl" />
                     {trickCards.map((play: any) => {
                         let style: any = {};
 
                         switch (play.playerId) {
                             case "P1":
                                 style = {
-                                    bottom: "5%",
+                                    bottom: "8%",
                                     left: "50%",
                                     transform: "translateX(-50%)",
                                 };
                                 break;
                             case "P2":
                                 style = {
-                                    left: "25%",
+                                    left: "30%",
                                     top: "50%",
                                     transform: "translateY(-50%)",
                                 };
                                 break;
                             case "P3":
                                 style = {
-                                    top: "5%",
+                                    top: "8%",
                                     left: "50%",
                                     transform: "translateX(-50%)",
                                 };
                                 break;
                             case "P4":
                                 style = {
-                                    right: "25%",
+                                    right: "30%",
                                     top: "50%",
                                     transform: "translateY(-50%)",
                                 };

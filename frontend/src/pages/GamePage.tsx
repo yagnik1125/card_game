@@ -23,10 +23,14 @@ import {
     setDealing,
     setTrickCards,
     setWinner,
+    setTrumpDeclaration,
+    setTrickWinner,
 } from "@/store/slices/gameSlice";
 import GameBoard from "@/components/GameBoard";
 import WinnerModal from "@/components/WinnerModal";
 import GameLoader from "@/components/GameLoader";
+import TrumpDeclarationModal from "@/components/TrumpDeclarationModal";
+import TrickWinnerModal from "@/components/TrickWinnerModal";
 
 export default function GamePage() {
     const dispatch = useDispatch();
@@ -40,7 +44,28 @@ export default function GamePage() {
     const trickCards = useSelector(
         (state: RootState) => state.game.trickCards
     );
+    const trumpDeclaration = useSelector(
+        (state: RootState) => state.game.trumpDeclaration
+    );
+    const trickWinner = useSelector(
+        (state: RootState) => state.game.trickWinner
+    );
     const playingRef = useRef(false);
+
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const waitNextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+    const dealing = useSelector((state: RootState) => state.game.dealing);
+    const dealingRef = useRef(dealing);
+
+    useEffect(() => {
+        dealingRef.current = dealing;
+    }, [dealing]);
+
+    const waitForDealingComplete = async () => {
+        while (dealingRef.current) {
+            await wait(1600);
+        }
+    };
 
     const load = async () => {
         if (!gameId) return;
@@ -50,22 +75,13 @@ export default function GamePage() {
             suit: play.card.suit,
             rank: play.card.rank
         }));
-        // dispatch(setDealing(true));
-        // await new Promise(r => setTimeout(r, 1500));
-        // dispatch(setTrickCards(trickCards));
-        // dispatch(setSnapshot(view));
-        // await new Promise(r => requestAnimationFrame(() => r(null)));
-        // dispatch(setDealing(false));
-        // await new Promise(r => setTimeout(r, 1600));
-        await new Promise(r => setTimeout(r, 700));
-        dispatch(setTrickCards(trickCards));
-        await new Promise(r => setTimeout(r, 500));
+
         dispatch(setDealing(true));
-        await new Promise(r => setTimeout(r, 1500));
+        dispatch(setTrickCards(trickCards));
         dispatch(setSnapshot(view));
-        await new Promise(r => requestAnimationFrame(() => r(null)));
+        await waitNextFrame();
+        await wait(1600);
         dispatch(setDealing(false));
-        await new Promise(r => setTimeout(r, 1600));
     };
     useEffect(() => {
         load();
@@ -88,6 +104,9 @@ export default function GamePage() {
             let latestSnapshot = snapshot;
             for (const event of result.events) {
                 if (event.type === "CARD_PLAYED" || event.type === "BOT_PLAY") {
+                    if (event.type === "BOT_PLAY") {
+                        await waitForDealingComplete();
+                    }
                     cards.push({
                         playerId: event.playerId,
                         suit: event.suit,
@@ -108,17 +127,20 @@ export default function GamePage() {
                     dispatch(
                         setSnapshot(latestSnapshot)
                     );
-                    await new Promise(r => setTimeout(r, 700));
+                    await wait(700);
                 }
                 if (event.type === "TRUMP_DECLARED") {
                     latestSnapshot = {
                         ...latestSnapshot,
                         trumpSuit: result.snapshot.trumpSuit,
                     };
+                    dispatch(setTrumpDeclaration(result.snapshot.trumpSuit));
                     dispatch(setSnapshot(latestSnapshot));
+                    await wait(2000);
+                    dispatch(setTrumpDeclaration(null));
                 }
                 if (event.type === "TRICK_COMPLETED") {
-                    await new Promise(r => setTimeout(r, 700));
+                    await wait(700);
                     dispatch(setTrickCards([]));
                     cards = [];
                     await new Promise(r => requestAnimationFrame(() => r(null)));
@@ -129,27 +151,23 @@ export default function GamePage() {
                             currentPlayerId: event.playerId
                         })
                     );
+                    dispatch(setTrickWinner(event.playerId));
+                    await wait(1000);
+                    dispatch(setTrickWinner(null));
                 }
                 if (event.type === "ROUND_COMPLETED") {
-                    await new Promise(r => setTimeout(r, 700));
+                    await wait(700);
+                    dispatch(setDealing(true));
                     dispatch(setTrickCards([]));
                     cards = [];
-                    await new Promise(r => setTimeout(r, 500));
-                    dispatch(setDealing(true));
-                    await new Promise(r => setTimeout(r, 1500));
                     latestSnapshot = result.snapshot;
-                    dispatch(
-                        setSnapshot({
-                            ...latestSnapshot,
-                            currentPlayerId: event.playerId
-                        })
-                    );
-                    await new Promise(r => requestAnimationFrame(() => r(null)));
+                    dispatch(setSnapshot({ ...latestSnapshot, currentPlayerId: event.playerId }));
+                    await waitNextFrame();
+                    await wait(1600);
                     dispatch(setDealing(false));
-                    await new Promise(r => setTimeout(r, 1600));
                 }
                 if (event.type === "MATCH_COMPLETED") {
-                    await new Promise(r => setTimeout(r, 700));
+                    await wait(700);
                     dispatch(setTrickCards([]));
                     cards = [];
                     latestSnapshot = result.snapshot;
@@ -159,7 +177,7 @@ export default function GamePage() {
                             currentPlayerId: event.playerId
                         })
                     );
-                    await new Promise(r => setTimeout(r, 1200));
+                    await wait(1200);
                 }
             }
 
@@ -192,6 +210,10 @@ export default function GamePage() {
             <GameBoard
                 onPlay={handlePlay}
             />
+
+            <TrumpDeclarationModal suit={trumpDeclaration} />
+
+            <TrickWinnerModal playerId={trickWinner} />
 
             {winner && <WinnerModal
                 winner={winner}

@@ -36,7 +36,7 @@ export default function Avatar({
                     border border-yellow-200
                 ">
                     <Crown
-                        size={clampIcon(0.9, 1.2, 1.4)*10}
+                        size={clampIcon(0.9, 1.2, 1.4) * 10}
                         className="drop-shadow-sm"
                     />
                 </div>
@@ -80,25 +80,38 @@ export default function Avatar({
                     }
                 `}>
                     {isHuman
-                        ? <User size={clampIcon(1, 1.3, 1.6)*30} />
-                        : <Bot size={clampIcon(1, 1.3, 1.6)*30} />
+                        ? <User size={clampIcon(1, 1.3, 1.6) * 30} />
+                        : <Bot size={clampIcon(1, 1.3, 1.6) * 30} />
                     }
                 </div>
 
                 {/* Online Pulse (for active player) */}
                 {active && (
-                    <span className="
-                        absolute
-                        bottom-0
-                        right-0
-                        w-3
-                        h-3
-                        rounded-full
-                        bg-green-400
-                        ring-2
-                        ring-black
-                        animate-pulse
-                    " />
+                    <>
+                        <span
+                            className="
+                            absolute
+                            -inset-2.5
+                            rounded-full
+                            bg-yellow-400/25
+                            blur-xl
+                            animate-pulse
+                            -z-10
+                        "
+                        />
+
+                        <span
+                            className="
+                            absolute
+                            -inset-5
+                            rounded-full
+                            bg-yellow-300/10
+                            blur-2xl
+                            animate-pulse
+                            -z-20
+                        "
+                        />
+                    </>
                 )}
             </div>
 
