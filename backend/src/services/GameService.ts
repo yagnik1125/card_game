@@ -176,6 +176,12 @@ export class GameService {
         const trickBefore: Trick = session.gameState.currentTrick;
         const roundBefore: Round = session.gameState.currentRound;
         const matchBefore: boolean = session.gameState.completed;
+        const playerStatsBefore = session.match.players.map(p => ({
+            playerId: p.id,
+            tricksWonThisRound: p.stats.tricksWonThisRound,
+            totalTricksWon: p.stats.totalTricksWon,
+            cardsPlayed: p.stats.cardsPlayed
+        }));
         const trumpSuitBefore: Suit | null = session.gameState!.currentRound.state.trumpSuit;
 
         PlayCardService.playCard(gameId, playerId, card);
@@ -200,28 +206,75 @@ export class GameService {
         const matchCompleted: boolean = !matchBefore && afterHuman.gameState!.completed;
 
         if (matchCompleted) {
+            const trickWinner: Player | undefined = afterHuman.match.players.find(p => p.id === trickBefore.winnerPlayerId);
+            const roundWinner: Player | undefined = afterHuman.match.players.find(p => p.id === roundBefore.winnerPlayerId);
+            const trickWinnerStatsBefore = playerStatsBefore.find(s => s.playerId === trickWinner!.id)!;
             events.push({
                 type: "MATCH_COMPLETED",
                 winner: afterHuman.match.result?.winnerPlayerId,
                 playerId: afterHuman.match.result?.winnerPlayerId,
-                trickWinnerId: trickBefore.winnerPlayerId,
-                roundWinnerId: roundBefore.winnerPlayerId,
+                trickWinner: {
+                    id: trickWinner!.id,
+                    name: trickWinner!.name,
+                    // Use stats from before round reset: tricksWonThisRound was incremented by GameFlowService
+                    tricksWonThisRound: trickWinnerStatsBefore.tricksWonThisRound + 1,
+                },
+                roundWinner: {
+                    id: roundWinner!.id,
+                    name: roundWinner!.name,
+                    // Map all players' stats from BEFORE reset
+                    players: playerStatsBefore.map((stats) => ({
+                        id: stats.playerId,
+                        name: session.match.players.find(p => p.id === stats.playerId)!.name,
+                        // Add 1 to trick winner's stats since they just won this trick
+                        tricksWonThisRound: stats.playerId === trickWinner!.id
+                            ? stats.tricksWonThisRound + 1
+                            : stats.tricksWonThisRound,
+                    })),
+                }
             });
         }
         else if (roundCompleted) {
+            const trickWinner: Player | undefined = afterHuman.match.players.find(p => p.id === trickBefore.winnerPlayerId);
+            const roundWinner: Player | undefined = afterHuman.match.players.find(p => p.id === roundBefore.winnerPlayerId);
+            const trickWinnerStatsBefore = playerStatsBefore.find(s => s.playerId === trickWinner!.id)!;
             events.push({
                 type: "ROUND_COMPLETED",
                 roundNumber: afterHuman.gameState!.currentRound.state.roundNumber,
                 playerId: afterHuman.gameState!.leaderPlayerId,
-                trickWinnerId: trickBefore.winnerPlayerId,
-                roundWinnerId: roundBefore.winnerPlayerId,
+                trickWinner: {
+                    id: trickWinner!.id,
+                    name: trickWinner!.name,
+                    // Use stats from before round reset: tricksWonThisRound was incremented by GameFlowService
+                    tricksWonThisRound: trickWinnerStatsBefore.tricksWonThisRound + 1,
+                },
+                roundWinner: {
+                    id: roundWinner!.id,
+                    name: roundWinner!.name,
+                    // Map all players' stats from BEFORE reset
+                    players: playerStatsBefore.map((stats) => ({
+                        id: stats.playerId,
+                        name: session.match.players.find(p => p.id === stats.playerId)!.name,
+                        // Add 1 to trick winner's stats since they just won this trick
+                        tricksWonThisRound: stats.playerId === trickWinner!.id
+                            ? stats.tricksWonThisRound + 1
+                            : stats.tricksWonThisRound,
+                    })),
+                }
             });
         }
         else if (trickCompleted) {
+            const trickWinner: Player | undefined = afterHuman.match.players.find(p => p.id === trickBefore.winnerPlayerId);
+            const trickWinnerStatsBefore = playerStatsBefore.find(s => s.playerId === trickWinner!.id)!;
             events.push({
                 type: "TRICK_COMPLETED",
                 playerId: afterHuman.gameState!.leaderPlayerId,
-                trickWinnerId: trickBefore.winnerPlayerId,
+                trickWinner: {
+                    id: trickWinner!.id,
+                    name: trickWinner!.name,
+                    // GameFlowService already incremented tricksWonThisRound, so stats already reflect the win
+                    tricksWonThisRound: trickWinnerStatsBefore.tricksWonThisRound + 1,
+                },
             });
         }
 

@@ -26,23 +26,23 @@ export interface BotPlayedEvent {
 export interface TrickCompletedEvent {
     type: "TRICK_COMPLETED";
     playerId: string | null;
-    trickWinnerId: string | null;
+    trickWinner: TrickWinner;
 }
 
 export interface RoundCompletedEvent {
     type: "ROUND_COMPLETED";
     roundNumber: number;
     playerId: string | null;
-    trickWinnerId: string | null;
-    roundWinnerId: string | null;
+    trickWinner: TrickWinner;
+    roundWinner: RoundWinner;
 }
 
 export interface MatchCompletedEvent {
     type: "MATCH_COMPLETED";
     winner?: string;
     playerId?: string;
-    trickWinnerId: string | null;
-    roundWinnerId: string | null;
+    trickWinner: TrickWinner;
+    roundWinner: RoundWinner;
 }
 
 export interface TurnChangedEvent {
@@ -53,4 +53,16 @@ export interface TurnChangedEvent {
 export interface TrumpDeclaredEvent {
     type: "TRUMP_DECLARED";
     playerId: string;
+}
+
+export interface TrickWinner {
+    id: string;
+    name: string;
+    tricksWonThisRound: number;
+}
+
+export interface RoundWinner {
+    id: string;
+    name: string;
+    players: TrickWinner[];
 }

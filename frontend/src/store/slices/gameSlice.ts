@@ -10,8 +10,8 @@ interface GameState {
     loading: boolean;
     winner: any | null;
     trumpDeclaration: string | null;
-    trickWinner: string | null;
-    roundWinner: string | null;
+    trickWinner: any | null;
+    roundWinner: any | null;
 }
 const initialState: GameState = {
     snapshot: null,

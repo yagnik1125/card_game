@@ -8,26 +8,15 @@ import {
 } from "lucide-react";
 
 interface Props {
-    playerId: string | null;
+    roundWinner: any | null;
 }
 
 export default function RoundWinnerModal({
-    playerId,
+    roundWinner,
 }: Props) {
-    if (!playerId) return null;
+    if (!roundWinner) return null;
 
-    const snapshot = useSelector(
-        (state: RootState) => state.game.snapshot
-    );
-
-    const winner = snapshot?.players.find(
-        (p: any) => p.id === playerId
-    );
-
-    const winnerName =
-        playerId === "P1"
-            ? "You"
-            : winner?.name;
+    const winnerName = roundWinner.id === "P1" ? "You" : roundWinner.name ?? "Unknown";
 
     return (
         <div
@@ -122,9 +111,9 @@ export default function RoundWinnerModal({
                         gap-4
                     "
                 >
-                    {snapshot.players.map((player: any) => {
+                    {roundWinner.players.map((player: any) => {
                         const isWinner =
-                            player.id === playerId;
+                            player.id === roundWinner.id;
 
                         const isHuman =
                             player.id === "P1";
@@ -217,7 +206,7 @@ export default function RoundWinnerModal({
                                         font-bold
                                     "
                                 >
-                                    {player.tricksWonRound}
+                                    {player.tricksWonThisRound}
                                 </div>
 
                                 <div

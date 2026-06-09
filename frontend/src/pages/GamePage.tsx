@@ -155,7 +155,7 @@ export default function GamePage() {
                             currentPlayerId: event.playerId
                         })
                     );
-                    dispatch(setTrickWinner(event.trickWinnerId));
+                    dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
                     dispatch(setTrickWinner(null));
                 }
@@ -165,10 +165,10 @@ export default function GamePage() {
                     cards = [];
                     latestSnapshot = result.snapshot;
                     dispatch(setSnapshot({ ...latestSnapshot, currentPlayerId: event.playerId }));
-                    dispatch(setTrickWinner(event.trickWinnerId));
+                    dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
                     dispatch(setTrickWinner(null));
-                    dispatch(setRoundWinner(event.roundWinnerId));
+                    dispatch(setRoundWinner(event.roundWinner));
                     await wait(2000);
                     dispatch(setRoundWinner(null));
                     await waitNextFrame();
@@ -185,10 +185,10 @@ export default function GamePage() {
                             currentPlayerId: event.playerId
                         })
                     );
-                    dispatch(setTrickWinner(event.trickWinnerId));
+                    dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
                     dispatch(setTrickWinner(null));
-                    dispatch(setRoundWinner(event.roundWinnerId));
+                    dispatch(setRoundWinner(event.roundWinner));
                     await wait(2000);
                     dispatch(setRoundWinner(null));
                     await wait(1000);
@@ -217,20 +217,15 @@ export default function GamePage() {
 
     return (
         <>
-            <GameBoard
-                onPlay={handlePlay}
-            />
+            <GameBoard onPlay={handlePlay} />
 
             <TrumpDeclarationModal suit={trumpDeclaration} />
 
-            <TrickWinnerModal playerId={trickWinner} />
+            <TrickWinnerModal trickWinner={trickWinner} />
 
-            <RoundWinnerModal playerId={roundWinner} />
+            <RoundWinnerModal roundWinner={roundWinner} />
 
-            {winner && <WinnerModal
-                winner={winner}
-                gameId={snapshot.gameId}
-            />}
+            <WinnerModal winner={winner} gameId={snapshot.gameId} />
         </>
     )
 }

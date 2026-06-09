@@ -146,7 +146,7 @@ export default function TrumpDeclarationModal({
                     "
                 >
                     {/* ACE of trump */}
-                    <div
+                    {/* <div
                         className="
                             relative
                             w-21
@@ -200,7 +200,7 @@ export default function TrumpDeclarationModal({
                         >
                             A
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Label */}
                     <div>

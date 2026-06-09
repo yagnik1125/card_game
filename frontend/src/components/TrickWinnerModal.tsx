@@ -9,36 +9,32 @@ import {
 } from "lucide-react";
 
 interface Props {
-    playerId: string | null;
+    trickWinner: any | null;
 }
 
 export default function TrickWinnerModal({
-    playerId,
+    trickWinner,
 }: Props) {
     const snapshot = useSelector(
         (state: RootState) => state.game.snapshot
     );
 
-    if (!playerId || !snapshot) {
+    if (!trickWinner || !snapshot) {
         return null;
     }
 
-    const player = snapshot.players.find(
-        (p: any) => p.id === playerId
-    );
-
-    const isHuman = playerId === "P1";
+    const isHuman = trickWinner.id === "P1";
 
     const playerName = isHuman
         ? "You"
-        : player?.name ?? "Unknown";
+        : trickWinner.name ?? "Unknown";
 
     return (
         <div
             className="
                 fixed
                 inset-0
-                z-[150]
+                z-150
                 flex
                 items-center
                 justify-center
@@ -82,7 +78,7 @@ export default function TrickWinnerModal({
                 className="
                     relative
                     overflow-hidden
-                    rounded-[2rem]
+                    rounded-4xl
                     border
                     border-green-400/30
                     bg-black/80
@@ -103,7 +99,7 @@ export default function TrickWinnerModal({
                 <div className="
                     absolute
                     inset-0
-                    bg-gradient-to-br
+                    bg-linear-to-br
                     from-green-400/10
                     via-transparent
                     to-emerald-400/10
@@ -172,7 +168,7 @@ export default function TrickWinnerModal({
                         h-24
                         rounded-full
 
-                        bg-gradient-to-br
+                        bg-linear-to-br
                         from-green-500
                         to-emerald-700
 
@@ -254,7 +250,7 @@ export default function TrickWinnerModal({
                             font-bold
                             text-lg
                         ">
-                            {player?.tricksWonRound ?? 0}
+                            {trickWinner.tricksWonThisRound ?? 0}
                         </span>
                     </div>
                 </div>
