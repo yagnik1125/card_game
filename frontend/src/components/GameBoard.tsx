@@ -217,15 +217,8 @@ export default function GameBoard({
                                 tracking-[0.25em]
                                 text-white/60
                             ">
-                                Scoreboard
-                            </div>
-
-                            {/* <div className="
-                                text-lg
-                                font-bold
-                            ">
                                 Total Tricks
-                            </div> */}
+                            </div>
                         </div>
 
                         <div className="p-1">

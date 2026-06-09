@@ -7,6 +7,7 @@ import { GameEvent } from "../events/GameEvents";
 import { Player } from "../core/Player";
 import { Card } from "../core/Card";
 import { BotDecision } from "../bots/BotDecision";
+import { Round, Trick } from "../domain";
 
 
 
@@ -61,8 +62,8 @@ export class BotTurnService {
             if (!currentPlayer || !currentPlayer.isBot) {
                 break;
             }
-            const trickBefore: number = session.gameState.currentTrick.trickNumber;
-            const roundBefore: number = session.gameState.currentRound.state.roundNumber;
+            const trickBefore: Trick = session.gameState.currentTrick;
+            const roundBefore: Round = session.gameState.currentRound;
             const matchBefore: boolean = session.gameState.completed;
             const legalCards: Card[] = LegalMoveGenerator.getLegalCards(currentPlayer, session.gameState.currentTrick);
             if (legalCards.length === 0) {
@@ -108,20 +109,25 @@ export class BotTurnService {
                 events.push({
                     type: "MATCH_COMPLETED",
                     winner: session.match.result?.winnerPlayerId,
-                    playerId: session.match.result?.winnerPlayerId
+                    playerId: session.match.result?.winnerPlayerId,
+                    trickWinnerId: trickBefore.winnerPlayerId,
+                    roundWinnerId: roundBefore.winnerPlayerId,
                 });
             }
-            else if (roundAfter !== roundBefore) {
+            else if (roundAfter !== roundBefore.state.roundNumber) {
                 events.push({
                     type: "ROUND_COMPLETED",
                     roundNumber: roundAfter,
-                    playerId: session.gameState.leaderPlayerId
+                    playerId: session.gameState.leaderPlayerId,
+                    trickWinnerId: trickBefore.winnerPlayerId,
+                    roundWinnerId: roundBefore.winnerPlayerId,
                 });
             }
-            else if (trickAfter !== trickBefore) {
+            else if (trickAfter !== trickBefore.trickNumber) {
                 events.push({
                     type: "TRICK_COMPLETED",
-                    playerId: session.gameState.leaderPlayerId
+                    playerId: session.gameState.leaderPlayerId,
+                    trickWinnerId: trickBefore.winnerPlayerId,
                 });
             }
         }

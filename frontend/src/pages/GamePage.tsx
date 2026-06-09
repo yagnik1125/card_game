@@ -25,12 +25,14 @@ import {
     setWinner,
     setTrumpDeclaration,
     setTrickWinner,
+    setRoundWinner,
 } from "@/store/slices/gameSlice";
 import GameBoard from "@/components/GameBoard";
 import WinnerModal from "@/components/WinnerModal";
 import GameLoader from "@/components/GameLoader";
 import TrumpDeclarationModal from "@/components/TrumpDeclarationModal";
 import TrickWinnerModal from "@/components/TrickWinnerModal";
+import RoundWinnerModal from "@/components/RoundWinnerModal";
 
 export default function GamePage() {
     const dispatch = useDispatch();
@@ -49,6 +51,9 @@ export default function GamePage() {
     );
     const trickWinner = useSelector(
         (state: RootState) => state.game.trickWinner
+    );
+    const roundWinner = useSelector(
+        (state: RootState) => state.game.roundWinner
     );
     const playingRef = useRef(false);
 
@@ -140,7 +145,6 @@ export default function GamePage() {
                     dispatch(setTrumpDeclaration(null));
                 }
                 if (event.type === "TRICK_COMPLETED") {
-                    await wait(700);
                     dispatch(setTrickCards([]));
                     cards = [];
                     await new Promise(r => requestAnimationFrame(() => r(null)));
@@ -151,23 +155,27 @@ export default function GamePage() {
                             currentPlayerId: event.playerId
                         })
                     );
-                    dispatch(setTrickWinner(event.playerId));
+                    dispatch(setTrickWinner(event.trickWinnerId));
                     await wait(1000);
                     dispatch(setTrickWinner(null));
                 }
                 if (event.type === "ROUND_COMPLETED") {
-                    await wait(700);
                     dispatch(setDealing(true));
                     dispatch(setTrickCards([]));
                     cards = [];
                     latestSnapshot = result.snapshot;
                     dispatch(setSnapshot({ ...latestSnapshot, currentPlayerId: event.playerId }));
+                    dispatch(setTrickWinner(event.trickWinnerId));
+                    await wait(1000);
+                    dispatch(setTrickWinner(null));
+                    dispatch(setRoundWinner(event.roundWinnerId));
+                    await wait(2000);
+                    dispatch(setRoundWinner(null));
                     await waitNextFrame();
                     await wait(1600);
                     dispatch(setDealing(false));
                 }
                 if (event.type === "MATCH_COMPLETED") {
-                    await wait(700);
                     dispatch(setTrickCards([]));
                     cards = [];
                     latestSnapshot = result.snapshot;
@@ -177,18 +185,20 @@ export default function GamePage() {
                             currentPlayerId: event.playerId
                         })
                     );
-                    await wait(1200);
+                    dispatch(setTrickWinner(event.trickWinnerId));
+                    await wait(1000);
+                    dispatch(setTrickWinner(null));
+                    dispatch(setRoundWinner(event.roundWinnerId));
+                    await wait(2000);
+                    dispatch(setRoundWinner(null));
+                    await wait(1000);
                 }
             }
 
-            dispatch(
-                setSnapshot(result.snapshot)
-            );
+            dispatch(setSnapshot(result.snapshot));
 
             if (result.snapshot.completed) {
-                dispatch(
-                    setWinner(result.snapshot)
-                );
+                dispatch(setWinner(result.snapshot));
             }
         } catch (error) {
             console.error(error);
@@ -214,6 +224,8 @@ export default function GamePage() {
             <TrumpDeclarationModal suit={trumpDeclaration} />
 
             <TrickWinnerModal playerId={trickWinner} />
+
+            <RoundWinnerModal playerId={roundWinner} />
 
             {winner && <WinnerModal
                 winner={winner}

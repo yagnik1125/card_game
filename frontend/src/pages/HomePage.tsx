@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { createGame } from "@/api/gameApi";
+import GameLoader from "@/components/GameLoader";
 
 type Difficulty = | "easy" | "medium" | "hard";
 
@@ -11,16 +12,23 @@ export default function HomePage() {
     const [difficulty, setDifficulty] = useState<Difficulty>("medium");
     const [creating, setCreating] = useState(false);
 
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     const create = async () => {
         try {
             setCreating(true);
             const result = await createGame(rounds, difficulty);
+            await wait(1000);
             navigate(`/game/${result.gameId}`);
         }
         finally {
             setCreating(false);
         }
     };
+
+    if (creating) {
+        return <GameLoader />;
+    }
 
     return (
         <div className="
@@ -178,7 +186,7 @@ export default function HomePage() {
                         disabled:opacity-50
                     "
                 >
-                    {creating ? "Creating..." : `Play ${rounds} Round ${difficulty} Game`}
+                    {`Play ${rounds} Round ${difficulty} Game`}
                 </button>
             </div>
         </div>
