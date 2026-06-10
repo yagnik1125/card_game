@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { GameService } from "../services/GameService";
-import { Card, GameSession, GameSessionManager } from "trump-and-twist-game-engine";
-import { GameStateResponse } from "../types/GameStateResponse";
-import { PlayTurnResponse } from "../types/PlayTurnResponse";
+import { GameService } from "../services/GameService.js";
+import { Card, GameSession, GameSessionManager } from "../../game-engine/src/index.js";
+import { GameStateResponse } from "../types/GameStateResponse.js";
+import { PlayTurnResponse } from "../types/PlayTurnResponse.js";
 
 interface GameParams {
     gameId: string;

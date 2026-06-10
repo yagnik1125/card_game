@@ -1,4 +1,4 @@
-import { GameGateway } from "./GameGateway";
+import { GameGateway } from "./GameGateway.js";
 
 export enum SocketEvents {
     CARD_PLAYED = "CARD_PLAYED",

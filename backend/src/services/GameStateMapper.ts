@@ -1,5 +1,5 @@
-import { GameSession, GameState } from "trump-and-twist-game-engine";
-import { GameStateResponse } from "../types/GameStateResponse";
+import { GameSession, GameState } from "../../game-engine/src/index.js";
+import { GameStateResponse } from "../types/GameStateResponse.js";
 
 export class GameStateMapper {
     static map(session: GameSession): GameStateResponse {
@@ -11,7 +11,7 @@ export class GameStateMapper {
             turnNumber: state.turnState.turnNumber,
             roundNumber: state.currentRound.state.roundNumber,
             trumpSuit: state.currentRound.state.trumpSuit,
-            players: session.match.players.map(player => ({
+            players: session.match.players.map((player: any) => ({
                 id: player.id,
                 name: player.name,
                 cardsRemaining: player.hand.length,
@@ -20,7 +20,7 @@ export class GameStateMapper {
             currentTrick: {
                 trickNumber: state.currentTrick.trickNumber,
                 leadSuit: state.currentTrick.leadSuit,
-                plays: state.currentTrick.plays.map(play => ({
+                plays: state.currentTrick.plays.map((play: any) => ({
                     playerId: play.playerId,
                     cardId: play.card.id,
                 }))
