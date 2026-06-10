@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { GameController } from "../controllers/GameController";
-import { GameGateway } from "../websocket/GameGateway";
+import { GameController } from "../controllers/GameController.js";
+import { GameGateway } from "../websocket/GameGateway.js";
 
 const router = Router();
 

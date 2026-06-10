@@ -12,11 +12,11 @@ import {
     Suit,
     Trick,
     Round,
-} from "trump-and-twist-game-engine";
-import { GameStateMapper } from "./GameStateMapper";
-import { GameEvent } from "../types/GameEvent";
-import { PlayTurnResponse } from "../types/PlayTurnResponse";
-import { GameStateResponse } from "../types/GameStateResponse";
+} from "../../game-engine/src/index.js";
+import { GameStateMapper } from "./GameStateMapper.js";
+import { GameEvent } from "../types/GameEvent.js";
+import { PlayTurnResponse } from "../types/PlayTurnResponse.js";
+import { GameStateResponse } from "../types/GameStateResponse.js";
 
 export class GameService {
     static createGame(numberOfRounds: number, difficulty: "easy" | "medium" | "hard"): GameSession {
@@ -34,11 +34,11 @@ export class GameService {
         cardId: string
     ) {
         const session = GameSessionManager.get(gameId);
-        const player = session.match.players.find(p => p.id === playerId);
+        const player = session.match.players.find((p: any) => p.id === playerId);
         if (!player) {
             throw new Error("Player not found");
         }
-        const card = player.hand.find(c => c.id === cardId);
+        const card = player.hand.find((c: any) => c.id === cardId);
         if (!card) {
             throw new Error("Card not found");
         }
@@ -52,7 +52,7 @@ export class GameService {
             currentTrick: {
                 trickNumber: updatedSession.gameState?.currentTrick.trickNumber,
                 leadSuit: updatedSession.gameState?.currentTrick.leadSuit,
-                plays: updatedSession.gameState?.currentTrick.plays.map(play => ({
+                plays: updatedSession.gameState?.currentTrick.plays.map((play: any) => ({
                     playerId: play.playerId,
                     cardId: play.card.id,
                     rank: play.card.rank,
@@ -71,7 +71,7 @@ export class GameService {
                 "Game not initialized"
             );
         }
-        const player: Player | undefined = session.match.players.find(p => p.id === playerId);
+        const player: Player | undefined = session.match.players.find((p: any) => p.id === playerId);
         if (!player) {
             throw new Error(
                 "Player not found"
@@ -100,7 +100,7 @@ export class GameService {
         playerId: string
     ) {
         const session: GameSession = GameSessionManager.get(gameId);
-        const player: Player | undefined = session.match.players.find(p => p.id === playerId);
+        const player: Player | undefined = session.match.players.find((p: any) => p.id === playerId);
         if (!player) {
             throw new Error(
                 "Player not found"
@@ -117,7 +117,7 @@ export class GameService {
     ) {
         const session: GameSession = GameSessionManager.get(gameId);
         const state: GameState = session.gameState!;
-        const human: Player = session.match.players.find(p => p.id === "P1")!;
+        const human: Player = session.match.players.find((p: any) => p.id === "P1")!;
         const legal: Card[] = LegalMoveGenerator.getLegalCards(human, state.currentTrick);
         return {
             gameId: session.gameId,
@@ -127,7 +127,7 @@ export class GameService {
             champion: state.currentRound.state.championPlayerId,
             currentPlayerId: state.turnState.currentPlayerId,
             players: session.match.players.map(
-                player => ({
+                (player: { id: string; name: any; hand: string | any[]; stats: { tricksWonThisRound: any; totalTricksWon: any; }; }) => ({
                     id: player.id,
                     name: player.name,
                     cardsRemaining: player.hand.length,
@@ -151,7 +151,7 @@ export class GameService {
         if (!session.gameState) {
             throw new Error("Game not initialized");
         }
-        const player: Player | undefined = session.match.players.find(p => p.id === playerId);
+        const player: Player | undefined = session.match.players.find((p: any) => p.id === playerId);
 
         if (!player) {
             throw new Error("Player not found");
@@ -176,7 +176,7 @@ export class GameService {
         const trickBefore: Trick = session.gameState.currentTrick;
         const roundBefore: Round = session.gameState.currentRound;
         const matchBefore: boolean = session.gameState.completed;
-        const playerStatsBefore = session.match.players.map(p => ({
+        const playerStatsBefore = session.match.players.map((p: { id: any; stats: { tricksWonThisRound: any; totalTricksWon: any; cardsPlayed: any; }; }) => ({
             playerId: p.id,
             tricksWonThisRound: p.stats.tricksWonThisRound,
             totalTricksWon: p.stats.totalTricksWon,
@@ -206,9 +206,9 @@ export class GameService {
         const matchCompleted: boolean = !matchBefore && afterHuman.gameState!.completed;
 
         if (matchCompleted) {
-            const trickWinner: Player | undefined = afterHuman.match.players.find(p => p.id === trickBefore.winnerPlayerId);
-            const roundWinner: Player | undefined = afterHuman.match.players.find(p => p.id === roundBefore.winnerPlayerId);
-            const trickWinnerStatsBefore = playerStatsBefore.find(s => s.playerId === trickWinner!.id)!;
+            const trickWinner: Player | undefined = afterHuman.match.players.find((p: { id: string | null; }) => p.id === trickBefore.winnerPlayerId);
+            const roundWinner: Player | undefined = afterHuman.match.players.find((p: { id: string | null; }) => p.id === roundBefore.winnerPlayerId);
+            const trickWinnerStatsBefore = playerStatsBefore.find((s: { playerId: string; }) => s.playerId === trickWinner!.id)!;
             events.push({
                 type: "MATCH_COMPLETED",
                 winner: afterHuman.match.result?.winnerPlayerId,
@@ -223,9 +223,9 @@ export class GameService {
                     id: roundWinner!.id,
                     name: roundWinner!.name,
                     // Map all players' stats from BEFORE reset
-                    players: playerStatsBefore.map((stats) => ({
+                    players: playerStatsBefore.map((stats: { playerId: string; tricksWonThisRound: number; }) => ({
                         id: stats.playerId,
-                        name: session.match.players.find(p => p.id === stats.playerId)!.name,
+                        name: session.match.players.find((p: { id: any; }) => p.id === stats.playerId)!.name,
                         // Add 1 to trick winner's stats since they just won this trick
                         tricksWonThisRound: stats.playerId === trickWinner!.id
                             ? stats.tricksWonThisRound + 1
@@ -235,9 +235,9 @@ export class GameService {
             });
         }
         else if (roundCompleted) {
-            const trickWinner: Player | undefined = afterHuman.match.players.find(p => p.id === trickBefore.winnerPlayerId);
-            const roundWinner: Player | undefined = afterHuman.match.players.find(p => p.id === roundBefore.winnerPlayerId);
-            const trickWinnerStatsBefore = playerStatsBefore.find(s => s.playerId === trickWinner!.id)!;
+            const trickWinner: Player | undefined = afterHuman.match.players.find((p: { id: string | null; }) => p.id === trickBefore.winnerPlayerId);
+            const roundWinner: Player | undefined = afterHuman.match.players.find((p: { id: string | null; }) => p.id === roundBefore.winnerPlayerId);
+            const trickWinnerStatsBefore = playerStatsBefore.find((s: { playerId: string; }) => s.playerId === trickWinner!.id)!;
             events.push({
                 type: "ROUND_COMPLETED",
                 roundNumber: afterHuman.gameState!.currentRound.state.roundNumber,
@@ -252,9 +252,9 @@ export class GameService {
                     id: roundWinner!.id,
                     name: roundWinner!.name,
                     // Map all players' stats from BEFORE reset
-                    players: playerStatsBefore.map((stats) => ({
+                    players: playerStatsBefore.map((stats: { playerId: string; tricksWonThisRound: number; }) => ({
                         id: stats.playerId,
-                        name: session.match.players.find(p => p.id === stats.playerId)!.name,
+                        name: session.match.players.find((p: { id: any; }) => p.id === stats.playerId)!.name,
                         // Add 1 to trick winner's stats since they just won this trick
                         tricksWonThisRound: stats.playerId === trickWinner!.id
                             ? stats.tricksWonThisRound + 1
@@ -264,8 +264,8 @@ export class GameService {
             });
         }
         else if (trickCompleted) {
-            const trickWinner: Player | undefined = afterHuman.match.players.find(p => p.id === trickBefore.winnerPlayerId);
-            const trickWinnerStatsBefore = playerStatsBefore.find(s => s.playerId === trickWinner!.id)!;
+            const trickWinner: Player | undefined = afterHuman.match.players.find((p: { id: string | null; }) => p.id === trickBefore.winnerPlayerId);
+            const trickWinnerStatsBefore = playerStatsBefore.find((s: { playerId: string; }) => s.playerId === trickWinner!.id)!;
             events.push({
                 type: "TRICK_COMPLETED",
                 playerId: afterHuman.gameState!.leaderPlayerId,

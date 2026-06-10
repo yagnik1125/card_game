@@ -4,9 +4,9 @@ import {
     GameSessionManager,
     PlayCardService,
     Player
-} from "trump-and-twist-game-engine";
+} from "../../game-engine/src/index.js";
 
-import { GameEventEmitter } from "../websocket/GameEventEmitter";
+import { GameEventEmitter } from "../websocket/GameEventEmitter.js";
 
 export class BotScheduler {
     static executeNextBot(
@@ -17,7 +17,7 @@ export class BotScheduler {
         if (!currentPlayerId) {
             return;
         }
-        const player: Player | undefined = session.match.players.find(p => p.id === currentPlayerId);
+        const player: Player | undefined = session.match.players.find((p: any) => p.id === currentPlayerId);
         if (!player) {
             return;
         }

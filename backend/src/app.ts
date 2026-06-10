@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
 
-import gameRoutes from "./routes/gameRoutes";
-import { logger } from "./middleware/logger";
-import { errorHandler } from "./middleware/errorHandler";
+import gameRoutes from "./routes/gameRoutes.js";
+import { logger } from "./middleware/logger.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 

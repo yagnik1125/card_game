@@ -1,4 +1,4 @@
-import { GameEvent } from "./GameEvent";
+import { GameEvent } from "./GameEvent.js";
 
 export interface PlayTurnResponse {
     events: GameEvent[];
