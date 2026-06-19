@@ -1,9 +1,9 @@
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 
-import Avatar from "./Avatar";
-import PlayerHand from "./PlayerHand";
-import Card from "./Card";
+import AvatarTeam from "./AvatarTeam";
+import PlayerHand from "../common/PlayerHand";
+import Card from "../common/Card";
 import { suitMap } from "@/utils/constants";
 import {
     LogOut
@@ -14,13 +14,13 @@ import {
 } from "react-router-dom";
 import { setSnapshot, setWinner, setTrickCards, setAnimating, setDealing } from "@/store/slices/gameSlice";
 import { removeGame } from "@/api/gameApi";
-import { BotCards } from "./BotCards";
+import { BotCards } from "../common/BotCards";
 
 interface Props {
     onPlay: (cardId: string) => void;
 }
 
-export default function GameBoard({
+export default function GameBoardTeam({
     onPlay,
 }: Props) {
     const dispatch = useDispatch();
@@ -222,13 +222,13 @@ export default function GameBoard({
                         </div>
 
                         <div className="p-1">
-                            {snapshot.players.map((p: any) => (
+                            {snapshot.teams.map((t: any) => (
                                 <div
-                                    key={p.id}
+                                    key={t.id}
                                     className="
                                         flex
                                         items-center
-                                        justify-between
+                                        justify-around
                                         py-px
                                         px-px
                                         rounded-xl
@@ -247,7 +247,7 @@ export default function GameBoard({
                                                 w-2
                                                 h-2
                                                 rounded-full
-                                                ${p.id === "P1"
+                                                ${t.id === "TEAM_A"
                                                     ? "bg-green-400"
                                                     : "bg-white/50"
                                                 }
@@ -256,14 +256,12 @@ export default function GameBoard({
 
                                         <span
                                             className={
-                                                p.id === "P1"
+                                                t.id === "TEAM_A"
                                                     ? "font-bold"
                                                     : ""
                                             }
                                         >
-                                            {p.id === "P1"
-                                                ? "You"
-                                                : p.name}
+                                            {t.name}
                                         </span>
                                     </div>
 
@@ -273,10 +271,10 @@ export default function GameBoard({
                                             text-center
                                             rounded-lg
                                             font-black
-                                            ${p.id === "P1" ? "bg-green-400 text-black" : "bg-white/10"}
+                                            ${t.id === "TEAM_A" ? "bg-green-400 text-black" : "bg-white/10"}
                                         `}
                                     >
-                                        {p.totalTricks}
+                                        {t.totalTricks}
                                     </div>
                                 </div>
                             ))}
@@ -290,10 +288,11 @@ export default function GameBoard({
                     {!dealing && <BotCards
                         count={top.cardsRemaining}
                     />}
-                    <Avatar
+                    <AvatarTeam
                         player={top}
-                        champion={snapshot.champion === top.id}
+                        champion={snapshot.championTeam === top.teamId}
                         active={snapshot.currentPlayerId === top.id}
+                        teamName={snapshot.teams.find((t: { id: any; }) => t.id === top.teamId).name}
                     />
                 </div>
 
@@ -304,20 +303,22 @@ export default function GameBoard({
                         count={left.cardsRemaining}
                         vertical
                     />}
-                    <Avatar
+                    <AvatarTeam
                         player={left}
-                        champion={snapshot.champion === left.id}
+                        champion={snapshot.championTeam === left.teamId}
                         active={snapshot.currentPlayerId === left.id}
+                        teamName={snapshot.teams.find((t: { id: any; }) => t.id === left.teamId).name}
                     />
                 </div>
 
                 {/* Right */}
 
                 <div className="absolute right-[2%] top-1/2 -translate-y-1/2 z-10 flex items-center gap-3">
-                    <Avatar
+                    <AvatarTeam
                         player={right}
-                        champion={snapshot.champion === right.id}
+                        champion={snapshot.championTeam === right.teamId}
                         active={snapshot.currentPlayerId === right.id}
+                        teamName={snapshot.teams.find((t: { id: any; }) => t.id === right.teamId).name}
                     />
                     {!dealing && <BotCards
                         count={right.cardsRemaining}
@@ -482,10 +483,11 @@ export default function GameBoard({
                 {/* Player */}
 
                 <div className="absolute bottom-[-1%] left-1/6 -translate-x-1/2 z-10">
-                    <Avatar
+                    <AvatarTeam
                         player={player}
-                        champion={snapshot.champion === player.id}
+                        champion={snapshot.championTeam === player.teamId}
                         active={snapshot.currentPlayerId === player.id}
+                        teamName={snapshot.teams.find((t: { id: any; }) => t.id === player.teamId).name}
                     />
                 </div>
             </div>

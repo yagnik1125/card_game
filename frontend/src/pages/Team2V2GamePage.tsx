@@ -22,26 +22,24 @@ import {
     setAnimating,
     setDealing,
     setTrickCards,
-    setWinner,
     setTrumpDeclaration,
+    setTrickWinnerTeam,
+    setRoundWinnerTeam,
+    setWinnerTeam,
     setTrickWinner,
-    setRoundWinner,
 } from "@/store/slices/gameSlice";
-import GameBoard from "@/components/solo/GameBoard";
-import WinnerModal from "@/components/solo/WinnerModal";
 import GameLoader from "@/components/common/GameLoader";
 import TrumpDeclarationModal from "@/components/common/TrumpDeclarationModal";
-import TrickWinnerModal from "@/components/solo/TrickWinnerModal";
-import RoundWinnerModal from "@/components/solo/RoundWinnerModal";
+import GameBoardTeam from "@/components/teams2v2/GameBoardTeam";
+import TrickWinnerTeamModal from "@/components/teams2v2/TrickWinnerTeamModal";
+import RoundWinnerTeamModal from "@/components/teams2v2/RoundWinnerTeamModal";
+import WinnerTeamModal from "@/components/teams2v2/WinnerTeamModal";
 
-export default function GamePage() {
+export default function Team2V2GamePage() {
     const dispatch = useDispatch();
     const { gameId } = useParams();
     const snapshot = useSelector(
         (state: RootState) => state.game.snapshot
-    );
-    const winner = useSelector(
-        (state: RootState) => state.game.winner
     );
     const trickCards = useSelector(
         (state: RootState) => state.game.trickCards
@@ -52,8 +50,14 @@ export default function GamePage() {
     const trickWinner = useSelector(
         (state: RootState) => state.game.trickWinner
     );
-    const roundWinner = useSelector(
-        (state: RootState) => state.game.roundWinner
+    const winnerTeam = useSelector(
+        (state: RootState) => state.game.winnerTeam
+    );
+    const trickWinnerTeam = useSelector(
+        (state: RootState) => state.game.trickWinnerTeam
+    );
+    const roundWinnerTeam = useSelector(
+        (state: RootState) => state.game.roundWinnerTeam
     );
     const playingRef = useRef(false);
 
@@ -155,9 +159,11 @@ export default function GamePage() {
                             currentPlayerId: event.playerId
                         })
                     );
+                    dispatch(setTrickWinnerTeam(event.trickWinnerTeam));
                     dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
                     dispatch(setTrickWinner(null));
+                    dispatch(setTrickWinnerTeam(null));
                 }
                 if (event.type === "ROUND_COMPLETED") {
                     dispatch(setDealing(true));
@@ -165,12 +171,14 @@ export default function GamePage() {
                     cards = [];
                     latestSnapshot = result.snapshot;
                     dispatch(setSnapshot({ ...latestSnapshot, currentPlayerId: event.playerId }));
+                    dispatch(setTrickWinnerTeam(event.trickWinnerTeam));
                     dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
+                    dispatch(setTrickWinnerTeam(null));
                     dispatch(setTrickWinner(null));
-                    dispatch(setRoundWinner(event.roundWinner));
+                    dispatch(setRoundWinnerTeam(event.roundWinnerTeam));
                     await wait(2000);
-                    dispatch(setRoundWinner(null));
+                    dispatch(setRoundWinnerTeam(null));
                     await waitNextFrame();
                     await wait(1600);
                     dispatch(setDealing(false));
@@ -185,12 +193,14 @@ export default function GamePage() {
                             currentPlayerId: event.playerId
                         })
                     );
+                    dispatch(setTrickWinnerTeam(event.trickWinnerTeam));
                     dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
+                    dispatch(setTrickWinnerTeam(null));
                     dispatch(setTrickWinner(null));
-                    dispatch(setRoundWinner(event.roundWinner));
+                    dispatch(setRoundWinnerTeam(event.roundWinnerTeam));
                     await wait(2000);
-                    dispatch(setRoundWinner(null));
+                    dispatch(setRoundWinnerTeam(null));
                     await wait(1000);
                 }
             }
@@ -198,7 +208,7 @@ export default function GamePage() {
             dispatch(setSnapshot(result.snapshot));
 
             if (result.snapshot.completed) {
-                dispatch(setWinner(result.snapshot));
+                dispatch(setWinnerTeam(result.snapshot));
             }
         } catch (error) {
             console.error(error);
@@ -217,15 +227,15 @@ export default function GamePage() {
 
     return (
         <>
-            <GameBoard onPlay={handlePlay} />
+            <GameBoardTeam onPlay={handlePlay} />
 
             <TrumpDeclarationModal suit={trumpDeclaration} />
 
-            <TrickWinnerModal trickWinner={trickWinner} />
+            <TrickWinnerTeamModal trickWinner={trickWinner} trickWinnerTeam={trickWinnerTeam} />
 
-            <RoundWinnerModal roundWinner={roundWinner} />
+            <RoundWinnerTeamModal snapshot={snapshot} roundWinnerTeam={roundWinnerTeam} />
 
-            <WinnerModal winner={winner} gameId={snapshot.gameId} />
+            <WinnerTeamModal winnerTeam={winnerTeam} gameId={snapshot.gameId} />
         </>
     )
 }

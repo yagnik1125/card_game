@@ -36,7 +36,7 @@ export class GameController {
         res: Response
     ) {
         try {
-            const session: GameSession = GameService.createGame(req.body.numberOfRounds, req.body.difficulty);
+            const session: GameSession = GameService.createGame(req.body.numberOfRounds, req.body.difficulty,req.body.mode);
             return res.status(201).json({
                 success: true,
                 data: session

@@ -13,14 +13,19 @@ import { HardBot } from "../bots/strategies/HardBot.js";
 import { MediumBot } from "../bots/strategies/MediumBot.js";
 import { BotDecision } from "../bots/BotDecision.js";
 import { PlayedCard } from "../domain/trick/PlayedCard.js";
+import { GameMode } from "../core/enums.js";
+import { Team } from "../domain/index.js";
+import { TeamFactory } from "../factories/TeamFactory.js";
 
 
 const players: Player[] = PlayerFactory.createPlayers("hard");
+// const teams: Team[] = TeamFactory.createDefaultTeams(players);
 
 const roundState: RoundState = {
     roundNumber: 1,
     trumpSuit: null,
     championPlayerId: null,
+    championTeamId: null,
     trumpDeclared: false,
 };
 
@@ -46,14 +51,16 @@ for (const player of players) {
         );
 
     const bot: EasyBot | MediumBot | HardBot =
-        BotFactory.create("medium");
+        BotFactory.create("hard");
 
     const decision: BotDecision =
         bot.chooseCard(
             player,
             legalCards,
             trick,
-            roundState
+            roundState,
+            GameMode.TEAMS_2V2,
+            players
         );
     const card: Card = decision.card;
     console.log(

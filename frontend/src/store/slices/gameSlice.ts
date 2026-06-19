@@ -12,6 +12,9 @@ interface GameState {
     trumpDeclaration: string | null;
     trickWinner: any | null;
     roundWinner: any | null;
+    winnerTeam: any | null;
+    trickWinnerTeam: any | null;
+    roundWinnerTeam: any | null;
 }
 const initialState: GameState = {
     snapshot: null,
@@ -23,6 +26,9 @@ const initialState: GameState = {
     trumpDeclaration: null,
     trickWinner: null,
     roundWinner: null,
+    winnerTeam: null,
+    trickWinnerTeam: null,
+    roundWinnerTeam: null,
 };
 const slice =
     createSlice({
@@ -56,6 +62,15 @@ const slice =
             setRoundWinner(state, action) {
                 state.roundWinner = action.payload;
             },
+            setWinnerTeam(state, action) {
+                state.winnerTeam = action.payload;
+            },
+            setTrickWinnerTeam(state, action) {
+                state.trickWinnerTeam = action.payload;
+            },
+            setRoundWinnerTeam(state, action) {
+                state.roundWinnerTeam = action.payload;
+            },
         }
     });
 
@@ -69,5 +84,8 @@ export const {
     setTrumpDeclaration,
     setTrickWinner,
     setRoundWinner,
+    setWinnerTeam,
+    setTrickWinnerTeam,
+    setRoundWinnerTeam,
 } = slice.actions;
 export default slice.reducer;

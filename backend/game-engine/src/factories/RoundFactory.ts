@@ -4,20 +4,23 @@ import { RoundState } from "../domain/round/RoundState.js";
 export class RoundFactory {
     static create(
         roundNumber: number,
-        championPlayerId: string | null
+        championPlayerId: string | null,
+        championTeamId: string | null
     ): Round {
         const state: RoundState = {
             roundNumber,
             trumpSuit: null,
             trumpDeclared: false,
-            championPlayerId
+            championPlayerId,
+            championTeamId
         };
         return {
             id: crypto.randomUUID(),
             state,
             tricks: [],
             history: [],
-            winnerPlayerId: null
+            winnerPlayerId: null,
+            winnerTeamId: null
         };
     }
 }

@@ -9,12 +9,16 @@ import { LegalMoveGenerator } from "../rules/LegalMoveGenerator.js";
 import { Trick } from "../domain/trick/Trick.js";
 import { BotDecision } from "../bots/BotDecision.js";
 import { PlayedCard } from "../domain/trick/PlayedCard.js";
+import { Team } from "../domain/index.js";
+import { GameMode } from "../core/enums.js";
 
 export class RoundEngine {
     static playRound(
         players: Player[],
         roundState: RoundState,
-        leaderId: string
+        leaderId: string,
+        teams: Team[],
+        mode: GameMode
     ): string {
         let currentLeaderId: string = leaderId;
         for (let trickNumber: number = 1; trickNumber <= 13; trickNumber++) {
@@ -37,7 +41,9 @@ export class RoundEngine {
                         player,
                         legalCards,
                         trick,
-                        roundState
+                        roundState,
+                        mode,
+                        players
                     );
                     card = decision.card;
                 } else {
@@ -62,15 +68,35 @@ export class RoundEngine {
             winnerPlayer.stats.totalTricksWon++;
             currentLeaderId = winnerPlayer.id;
             console.log(`Winner: ${winnerPlayer.name}`);
+            if (mode === GameMode.TEAMS_2V2) {
+                const winnerTeam: Team = teams.find(t => t.id === winnerPlayer.teamId)!;
+                winnerTeam.tricksWonThisRound++;
+                winnerTeam.totalTricksWon++;
+                console.log(`Winner Team: ${winnerTeam.name}`);
+            }
         }
-        const champion: Player =
-            players.reduce(
-                (best, current) =>
-                    current.stats.tricksWonThisRound >
-                        best.stats.tricksWonThisRound
-                        ? current
-                        : best
-            );
-        return champion.id;
+        if (mode === GameMode.SOLO) {
+            const champion: Player =
+                players.reduce(
+                    (best, current) =>
+                        current.stats.tricksWonThisRound >
+                            best.stats.tricksWonThisRound
+                            ? current
+                            : best
+                );
+            return champion.id;
+        }
+        else {
+            const championTeam: Team =
+                teams.reduce(
+                    (best, current) =>
+                        current.tricksWonThisRound >
+                            best.tricksWonThisRound
+                            ? current
+                            : best
+                );
+            championTeam.roundsWon++;
+            return championTeam.id;
+        }
     }
 }

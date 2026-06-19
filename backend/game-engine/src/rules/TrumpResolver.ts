@@ -1,6 +1,6 @@
 import { Card } from "../core/Card.js";
 import { Player } from "../core/Player.js";
-import { Suit } from "../core/enums.js";
+import { GameMode, Suit } from "../core/enums.js";
 import { RoundState } from "../domain/round/RoundState.js";
 
 export class TrumpResolver {
@@ -8,12 +8,16 @@ export class TrumpResolver {
         player: Player,
         card: Card,
         leadSuit: Suit,
-        state: RoundState
+        state: RoundState,
+        mode: GameMode
     ): boolean {
         if (state.trumpDeclared) {
             return false;
         }
-        if (player.id === state.championPlayerId) {
+        if (mode === GameMode.SOLO && player.id === state.championPlayerId) {
+            return false;
+        }
+        if (mode === GameMode.TEAMS_2V2 && player.teamId === state.championTeamId) {
             return false;
         }
         if (card.suit === leadSuit) {

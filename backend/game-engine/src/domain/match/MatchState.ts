@@ -1,6 +1,7 @@
 export interface MatchState {
     currentRound: number;
     totalRounds: number;
-    championPlayerId: string | null;
+    championPlayerId?: string;
+    championTeamId?: string;
     isCompleted: boolean;
 }

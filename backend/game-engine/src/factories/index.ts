@@ -4,3 +4,4 @@ export * from "./MatchFactory.js";
 export * from "./PlayerFactory.js";
 export * from "./RoundFactory.js";
 export * from "./TrickFactory.js";
+export * from "./TeamFactory.js";

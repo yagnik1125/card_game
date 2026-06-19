@@ -41,7 +41,8 @@ export class PlayCardService {
             gameState.currentTrick,
             player,
             card,
-            gameState.currentRound.state
+            gameState.currentRound.state,
+            session.match.mode
         );
         player.stats.cardsPlayed++;
         this.moveToNextPlayer(session);
