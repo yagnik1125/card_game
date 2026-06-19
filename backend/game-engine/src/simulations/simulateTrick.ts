@@ -14,8 +14,6 @@ import { MediumBot } from "../bots/strategies/MediumBot.js";
 import { BotDecision } from "../bots/BotDecision.js";
 import { PlayedCard } from "../domain/trick/PlayedCard.js";
 import { GameMode } from "../core/enums.js";
-import { Team } from "../domain/index.js";
-import { TeamFactory } from "../factories/TeamFactory.js";
 
 
 const players: Player[] = PlayerFactory.createPlayers("hard");
@@ -72,7 +70,8 @@ for (const player of players) {
         trick,
         player,
         card,
-        roundState
+        roundState,
+        GameMode.TEAMS_2V2
     );
 }
 

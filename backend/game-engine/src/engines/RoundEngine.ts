@@ -54,7 +54,8 @@ export class RoundEngine {
                     trick,
                     player,
                     card,
-                    roundState
+                    roundState,
+                    GameMode.TEAMS_2V2
                 );
             }
             const winningPlay: PlayedCard =
