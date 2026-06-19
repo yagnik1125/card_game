@@ -1,4 +1,5 @@
 import { Card } from "../core/Card.js";
+import { GameMode } from "../core/enums.js";
 import { Player } from "../core/Player.js";
 import { RoundState } from "../domain/round/RoundState.js";
 import { Trick } from "../domain/trick/Trick.js";
@@ -23,7 +24,8 @@ export class TrickEngine {
     trick: Trick,
     player: Player,
     card: Card,
-    roundState: RoundState
+    roundState: RoundState,
+    mode: GameMode
   ): void {
     const valid: boolean = this.validatePlay(trick, player, card);
     if (!valid) {
@@ -38,7 +40,8 @@ export class TrickEngine {
         player,
         card,
         trick.leadSuit,
-        roundState
+        roundState,
+        mode
       )
     ) {
       TrumpResolver.declareTrump(

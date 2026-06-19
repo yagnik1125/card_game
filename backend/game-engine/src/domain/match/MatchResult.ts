@@ -1,4 +1,5 @@
 export interface MatchResult {
-    winnerPlayerId: string;
+    winnerPlayerId?: string;
+    winnerTeamId?: string;
     totalTricksWon: number;
 }

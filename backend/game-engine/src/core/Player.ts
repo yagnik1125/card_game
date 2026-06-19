@@ -4,6 +4,7 @@ import { Card } from "./Card.js";
 
 export interface Player {
   id: string;
+  teamId?: string;
   name: string;
   hand: Card[];
   isBot: boolean;

@@ -52,4 +52,25 @@ export class PlayerFactory {
             }
         ];
     }
+    static createPlayer(difficulty: | "easy" | "medium" | "hard", id: string): Player {
+        return {
+            id: id,
+            name: "Bot 3",
+            hand: [],
+            isBot: true,
+            isConnected: true,
+            strategy: BotFactory.create(difficulty),
+            stats: this.createStats()
+        };
+    }
+    static createHuman(): Player {
+        return {
+            id: "P1",
+            name: "Player",
+            hand: [],
+            isBot: false,
+            isConnected: true,
+            stats: this.createStats()
+        };
+    }
 }

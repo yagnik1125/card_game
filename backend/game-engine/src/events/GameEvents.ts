@@ -27,22 +27,28 @@ export interface TrickCompletedEvent {
     type: "TRICK_COMPLETED";
     playerId: string | null;
     trickWinner: TrickWinner;
+    trickWinnerTeam?: TrickWinnerTeam;
 }
 
 export interface RoundCompletedEvent {
     type: "ROUND_COMPLETED";
     roundNumber: number;
     playerId: string | null;
-    trickWinner: TrickWinner;
-    roundWinner: RoundWinner;
+    trickWinner?: TrickWinner;
+    trickWinnerTeam?: TrickWinnerTeam;
+    roundWinner?: RoundWinner;
+    roundWinnerTeam?: RoundWinnerTeam;
 }
 
 export interface MatchCompletedEvent {
     type: "MATCH_COMPLETED";
     winner?: string;
+    winnerTeam?: string;
     playerId?: string;
-    trickWinner: TrickWinner;
-    roundWinner: RoundWinner;
+    trickWinner?: TrickWinner;
+    trickWinnerTeam?: TrickWinnerTeam;
+    roundWinner?: RoundWinner;
+    roundWinnerTeam?: RoundWinnerTeam;
 }
 
 export interface TurnChangedEvent {
@@ -65,4 +71,18 @@ export interface RoundWinner {
     id: string;
     name: string;
     players: TrickWinner[];
+}
+
+export interface TrickWinnerTeam {
+    id: string;
+    name: string;
+    tricksWonThisRound: number;
+    totalTricksWon: number;
+    roundsWon: number;
+}
+
+export interface RoundWinnerTeam {
+    id: string;
+    name: string;
+    teams: TrickWinnerTeam[];
 }

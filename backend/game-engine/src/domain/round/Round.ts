@@ -8,4 +8,5 @@ export interface Round {
   tricks: Trick[];
   history: TrickHistory[];
   winnerPlayerId: string | null;
+  winnerTeamId: string | null;
 }

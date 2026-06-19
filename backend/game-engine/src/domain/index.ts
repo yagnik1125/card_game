@@ -9,3 +9,4 @@ export * from "./trick/Trick.js";
 export * from "./trick/TrickHistory.js";
 export * from "./trick/TrickResult.js";
 export * from "./turn/TurnState.js";
+export * from "./team/Team.js";
