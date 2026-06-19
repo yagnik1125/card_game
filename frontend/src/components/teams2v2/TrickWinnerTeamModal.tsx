@@ -1,11 +1,9 @@
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import {
-    Trophy,
     Crown,
     Bot,
     User,
-    Sparkles,
 } from "lucide-react";
 
 interface Props {
