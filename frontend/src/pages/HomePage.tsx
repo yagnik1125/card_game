@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { createGame } from "@/api/gameApi";
+import { createGame, health } from "@/api/gameApi";
 import GameLoader from "@/components/common/GameLoader";
 
 type Difficulty = | "easy" | "medium" | "hard";
@@ -10,6 +10,7 @@ type GameMode = | "SOLO" | "TEAMS_2V2";
 export default function HomePage() {
     const navigate = useNavigate();
     const [rounds, setRounds] = useState(3);
+    const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<GameMode>("SOLO");
     const [difficulty, setDifficulty] = useState<Difficulty>("medium");
     const [creating, setCreating] = useState(false);
@@ -21,10 +22,10 @@ export default function HomePage() {
             setCreating(true);
             const result = await createGame(rounds, difficulty, mode);
             await wait(1000);
-            if(mode === "SOLO"){
+            if (mode === "SOLO") {
                 navigate(`/game/${result.gameId}`);
             }
-            else{
+            else {
                 navigate(`/game/team2v2/${result.gameId}`);
             }
         }
@@ -33,7 +34,17 @@ export default function HomePage() {
         }
     };
 
-    if (creating) {
+    const load = async () => {
+        setLoading(true);
+        await health();
+        setLoading(false);
+    }
+
+    useEffect(() => {
+        load();
+    }, []);
+
+    if (creating || loading) {
         return <GameLoader />;
     }
 
@@ -250,8 +261,8 @@ export default function HomePage() {
                     "
                 >
                     {`Play ${rounds} Round ${difficulty}  ${mode === "SOLO"
-                            ? "Solo"
-                            : "Teams 2v2"
+                        ? "Solo"
+                        : "Teams 2v2"
                         } Game`}
                 </button>
             </div>

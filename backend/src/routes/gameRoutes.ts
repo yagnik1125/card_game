@@ -4,6 +4,11 @@ import { GameGateway } from "../websocket/GameGateway.js";
 
 const router = Router();
 
+router.get(
+    "/health",
+    GameController.health
+);
+
 router.post(
     "/create",
     GameController.createGame

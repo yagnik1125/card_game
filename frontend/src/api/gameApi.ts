@@ -4,6 +4,11 @@ const API = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
 });
 
+export const health = async () => {
+    const response = await API.get(`/games/health`);
+    return response.data.success;
+};
+
 export const createGame = async (numberOfRounds: number, difficulty: "easy" | "medium" | "hard", mode: "SOLO" | "TEAMS_2V2") => {
     const response = await API.post("/games/create",
         {

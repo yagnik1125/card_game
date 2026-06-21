@@ -31,6 +31,23 @@ interface PlayTurnBody {
 }
 
 export class GameController {
+    static health(
+        req: Request,
+        res: Response
+    ) {
+        try {
+            return res.status(200).json({
+                success: true,
+                data: null
+            });
+        } catch (error) {
+            return res.status(404).json({
+                success: false,
+                message: "Error"
+            });
+        }
+    }
+
     static createGame(
         req: Request,
         res: Response
