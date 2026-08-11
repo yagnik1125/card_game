@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { GameService } from "../services/GameService.js";
+import { InFlightGuard } from "../services/InFlightGuard.js";
 import { Card, GameSession, GameSessionManager } from "../../game-engine/src/index.js";
 import { GameStateResponse } from "../types/GameStateResponse.js";
 import { PlayTurnResponse } from "../types/PlayTurnResponse.js";
@@ -87,8 +88,14 @@ export class GameController {
         req: Request<{}, {}, PlayCardBody>,
         res: Response
     ) {
+        const { gameId, playerId, cardId } = req.body;
+        if (!InFlightGuard.tryAcquire(gameId)) {
+            return res.status(409).json({
+                success: false,
+                message: "Game is busy"
+            });
+        }
         try {
-            const { gameId, playerId, cardId } = req.body;
             const session = GameService.playCard(gameId, playerId, cardId);
             return res.status(200).json({
                 success: true,
@@ -99,6 +106,8 @@ export class GameController {
                 success: false,
                 message: error.message
             });
+        } finally {
+            InFlightGuard.release(gameId);
         }
     }
 
@@ -196,7 +205,7 @@ export class GameController {
     ) {
         try {
             GameSessionManager.remove(req.params.gameId);
-            return res.status(204).json({
+            return res.status(200).json({
                 success: true,
                 message: "Game removed Successfully."
             });
@@ -213,11 +222,18 @@ export class GameController {
         req: Request<{}, {}, PlayTurnBody>,
         res: Response
     ) {
+        const { gameId, playerId, cardId } = req.body;
+        if (!InFlightGuard.tryAcquire(gameId)) {
+            return res.status(409).json({
+                success: false,
+                message: "Game is busy"
+            });
+        }
         try {
             const result: PlayTurnResponse = GameService.playTurn(
-                req.body.gameId,
-                req.body.playerId,
-                req.body.cardId
+                gameId,
+                playerId,
+                cardId
             );
             return res.status(200).json({
                 success: true,
@@ -229,6 +245,8 @@ export class GameController {
                 success: false,
                 message: error.message
             });
+        } finally {
+            InFlightGuard.release(gameId);
         }
     }
 }

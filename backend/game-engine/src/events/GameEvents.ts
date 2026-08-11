@@ -1,3 +1,5 @@
+import { Suit } from "../core/enums.js";
+
 export type GameEvent =
     | CardPlayedEvent
     | BotPlayedEvent
@@ -5,7 +7,13 @@ export type GameEvent =
     | RoundCompletedEvent
     | MatchCompletedEvent
     | TurnChangedEvent
-    | TrumpDeclaredEvent;
+    | TrumpDeclaredEvent
+    | RoundStartedEvent;
+
+export interface GameEventEnvelope {
+    gameId: string;
+    event: GameEvent;
+}
 
 export interface CardPlayedEvent {
     type: "CARD_PLAYED";
@@ -25,6 +33,7 @@ export interface BotPlayedEvent {
 
 export interface TrickCompletedEvent {
     type: "TRICK_COMPLETED";
+    trickNumber: number;
     playerId: string | null;
     trickWinner: TrickWinner;
     trickWinnerTeam?: TrickWinnerTeam;
@@ -54,11 +63,20 @@ export interface MatchCompletedEvent {
 export interface TurnChangedEvent {
     type: "TURN_CHANGED";
     currentPlayerId: string;
+    turnNumber: number;
 }
 
 export interface TrumpDeclaredEvent {
     type: "TRUMP_DECLARED";
     playerId: string;
+    suit: Suit | null;
+}
+
+export interface RoundStartedEvent {
+    type: "ROUND_STARTED";
+    roundNumber: number;
+    championPlayerId: string | null;
+    championTeamId: string | null;
 }
 
 export interface TrickWinner {

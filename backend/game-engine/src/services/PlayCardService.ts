@@ -1,8 +1,10 @@
 import { Card } from "../core/Card.js";
+import { Suit } from "../core/enums.js";
 import { GameSessionManager } from "../session/GameSessionManager.js";
 import { MoveValidator } from "../rules/MoveValidator.js";
 import { TrickEngine } from "../engines/TrickEngine.js";
 import { GameFlowService } from "./GameFlowService.js";
+import { EventBus } from "../events/EventBus.js";
 import { GameSession } from "../session/GameSession.js";
 import { GameState } from "../session/GameState.js";
 import { Player } from "../core/Player.js";
@@ -37,6 +39,7 @@ export class PlayCardService {
                 "Invalid move"
             );
         }
+        const trumpBefore: Suit | null = gameState.currentRound.state.trumpSuit;
         TrickEngine.playCard(
             gameState.currentTrick,
             player,
@@ -45,8 +48,39 @@ export class PlayCardService {
             session.match.mode
         );
         player.stats.cardsPlayed++;
+        const trumpAfter: Suit | null = gameState.currentRound.state.trumpSuit;
+        if (!trumpBefore && trumpAfter) {
+            EventBus.publish({
+                gameId,
+                event: {
+                    type: "TRUMP_DECLARED",
+                    playerId,
+                    suit: trumpAfter
+                }
+            });
+        }
+        EventBus.publish({
+            gameId,
+            event: {
+                type: player.isBot ? "BOT_PLAY" : "CARD_PLAYED",
+                playerId,
+                cardId: card.id,
+                suit: card.suit,
+                rank: card.rank
+            }
+        });
         this.moveToNextPlayer(session);
         GameFlowService.process(session);
+        if (!session.gameState!.completed) {
+            EventBus.publish({
+                gameId,
+                event: {
+                    type: "TURN_CHANGED",
+                    currentPlayerId: session.gameState!.turnState.currentPlayerId,
+                    turnNumber: session.gameState!.turnState.turnNumber
+                }
+            });
+        }
         GameSessionManager.save(session);
         return session;
     }

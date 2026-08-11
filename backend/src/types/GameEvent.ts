@@ -5,7 +5,8 @@ export type GameEvent =
     | RoundCompletedEvent
     | MatchCompletedEvent
     | TurnChangedEvent
-    | TrumpDeclaredEvent;
+    | TrumpDeclaredEvent
+    | RoundStartedEvent;
 
 export interface CardPlayedEvent {
     type: "CARD_PLAYED";
@@ -25,6 +26,7 @@ export interface BotPlayedEvent {
 
 export interface TrickCompletedEvent {
     type: "TRICK_COMPLETED";
+    trickNumber: number;
     playerId: string | null;
     trickWinner: TrickWinner;
     trickWinnerTeam?: TrickWinnerTeam;
@@ -54,11 +56,20 @@ export interface MatchCompletedEvent {
 export interface TurnChangedEvent {
     type: "TURN_CHANGED";
     currentPlayerId: string;
+    turnNumber: number;
 }
 
 export interface TrumpDeclaredEvent {
     type: "TRUMP_DECLARED";
     playerId: string;
+    suit: string | null;
+}
+
+export interface RoundStartedEvent {
+    type: "ROUND_STARTED";
+    roundNumber: number;
+    championPlayerId: string | null;
+    championTeamId: string | null;
 }
 
 export interface TrickWinner {

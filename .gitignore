@@ -7,6 +7,11 @@ game-engine/.vscode
 backend/dist
 backend/.env
 backend/.vscode
+backend/coverage
+backend/websocket_plan.txt
 frontend/dist
 frontend/.env
 frontend/.vscode
+.vscode
+GAME_PLAN_WEBSOCKET.md
+FE_PLAN_WEBSOCKET.md
