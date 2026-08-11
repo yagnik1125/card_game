@@ -1,5 +1,7 @@
 import { removeGame } from "@/api/gameApi";
 import { setSnapshot, setTrickCards, setAnimating, setDealing, setWinnerTeam } from "@/store/slices/gameSlice";
+import { HUMAN_PLAYER_ID } from "@/utils/constants";
+import { useWinnerConfetti } from "@/hooks/useWinnerConfetti";
 import {
     Trophy,
     Home,
@@ -8,6 +10,7 @@ import {
     User,
     Bot,
     Star,
+    Medal,
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 
@@ -20,6 +23,16 @@ interface Props {
     gameId: any;
 }
 
+function pickWinningTeam(teams: any[]): any {
+    return teams.reduce(
+        (best: any, current: any) =>
+            current.roundsWon > best.roundsWon ||
+            (current.roundsWon === best.roundsWon && current.totalTricks > best.totalTricks)
+                ? current
+                : best
+    );
+}
+
 export default function WinnerTeamModal({
     winnerTeam,
     gameId,
@@ -27,9 +40,21 @@ export default function WinnerTeamModal({
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+    const winningTeamData = winnerTeam ? pickWinningTeam(winnerTeam.teams) : null;
+    const winningTeamId = winningTeamData?.id;
+    const isHumanWinner =
+        !!winnerTeam &&
+        !!winningTeamId &&
+        winnerTeam.players.some(
+            (p: any) => p.id === HUMAN_PLAYER_ID && p.teamId === winningTeamId
+        );
+
+    useWinnerConfetti(!!winnerTeam, isHumanWinner);
+
     if (!winnerTeam) {
         return null;
     }
+
     const teamMembers = winnerTeam.players.reduce(
         (acc: any, player: any) => {
             if (!acc[player.teamId]) {
@@ -43,30 +68,29 @@ export default function WinnerTeamModal({
         {}
     );
 
-    const winningTeamData = winnerTeam.teams.reduce(
-        (best: any, current: any) =>
-            current.roundsWon > best.roundsWon || (current.roundsWon === best.roundsWon && current.totalTricks > best.totalTricks)
-                ? current
-                : best
-    );
-
-    const winningTeamId = winningTeamData?.id;
-
     const winnerMembers = teamMembers[winningTeamId] || [];
 
     const mvp = [...winnerTeam.players].sort(
         (a, b) => b.totalTricks - a.totalTricks
     )[0];
 
-    const closeModal = async () => {
-        await removeGame(gameId);
+    const standings = [...winnerTeam.teams].sort(
+        (a: any, b: any) =>
+            (b.roundsWon - a.roundsWon) || (b.totalTricks - a.totalTricks)
+    );
+
+    const closeModal = () => {
         dispatch(setSnapshot(null));
         dispatch(setWinnerTeam(null));
         dispatch(setTrickCards([]));
         dispatch(setAnimating(false));
         dispatch(setDealing(false));
         navigate("/");
+        removeGame(gameId).catch((error) => console.error(error));
     };
+
+    const memberName = (player: any) =>
+        player.id === HUMAN_PLAYER_ID ? "You" : player.name;
 
     return (
         <div className="
@@ -78,430 +102,381 @@ export default function WinnerTeamModal({
             flex
             items-center
             justify-center
-            p-4
+            p-3
         ">
+            {/* Ambient glow */}
+            <div className="
+                absolute
+                left-1/2
+                top-1/2
+                w-[640px]
+                h-[640px]
+                rounded-full
+                bg-yellow-500/10
+                blur-3xl
+                animate-glow-breath
+                pointer-events-none
+            " />
+
+            {/* Animated gradient border shell */}
             <div className="
                 relative
                 w-full
                 max-w-lg
-                max-h-[95vh]
-                overflow-hidden
+                max-h-[92vh]
                 rounded-3xl
-                border
-                border-white/10
-                bg-linear-to-b
-                from-slate-900
-                to-slate-950
-                shadow-2xl
-                flex
-                flex-col
+                p-[2px]
+                overflow-hidden
             ">
-
-                {/* Close */}
-
-                <button
-                    onClick={closeModal}
-                    className="
-                        absolute
-                        top-4
-                        right-4
-                        z-20
-                        w-10
-                        h-10
-                        rounded-full
-                        bg-white/10
-                        hover:bg-white/20
-                        flex
-                        items-center
-                        justify-center
-                        text-white
-                        cursor-pointer
-                    "
-                >
-                    <X size={18} />
-                </button>
-
-                {/* Scroll Area */}
-
                 <div className="
-                    overflow-y-auto
-                    flex-1
-                    scrollbar-hide
+                    absolute
+                    -inset-[150%]
+                    animate-spin-slow
+                    bg-[conic-gradient(from_0deg,#f59e0b_0%,#fbbf24_18%,transparent_45%,transparent_55%,#f59e0b_82%,#fbbf24_100%)]
+                " />
+                <div className="
+                    relative
+                    rounded-[22px]
+                    bg-slate-950
+                    flex
+                    flex-col
+                    max-h-[92vh]
+                    overflow-hidden
                 ">
 
-                    {/* Hero */}
-
-                    <div className="
-                        px-6
-                        pt-8
-                        pb-8
-                        text-center
-                        border-b
-                        border-white/10
-                    ">
-                        <div className="
-                            mx-auto
-                            w-32
-                            h-32
-                            rounded-full
-                            bg-yellow-400
-                            flex
-                            items-center
-                            justify-center
-                            shadow-[0_0_80px_rgba(250,204,21,.45)]
-                        ">
-                            <Trophy
-                                size={64}
-                                className="text-yellow-300"
-                            />
-                        </div>
-                        <div className="
-                            mt-5
-                            text-yellow-300
-                            uppercase
-                            tracking-[0.4em]
-                            text-xs
-                            font-bold
-                        ">
-                            Match Champion
-                        </div>
-                        <h1
-                            className="
-                                mt-4
-                                text-5xl
-                                font-black
-                                text-white
-                            "
-                        >
-                            TEAM{" "}
-                            {winningTeamData?.name}
-                        </h1>
-
-                        <div
-                            className="
-                                mt-3
-                                text-slate-400
-                                text-lg
-                            "
-                        >
-                            {winnerMembers
-                                .map((member: any) =>
-                                    member.id === "P1"
-                                        ? "You"
-                                        : member.name
-                                )
-                                .join(" + ")}
-                        </div>
-
-                        {/* Team Avatars */}
-
-                        <div
-                            className="
-                                flex
-                                justify-center
-                                -space-x-5
-                                mt-6
-                            "
-                        >
-                            {winnerMembers.map(
-                                (member: any) => (
-                                    <div
-                                        key={member.id}
-                                        className="
-                                            w-18
-                                            h-18
-                                            rounded-full
-                                            border-4
-                                            border-slate-900
-                                            bg-yellow-500/20
-                                            flex
-                                            items-center
-                                            justify-center
-                                        "
-                                    >
-                                        {member.id ===
-                                            "P1" ? (
-                                            <User
-                                                size={
-                                                    28
-                                                }
-                                                className="text-white"
-                                            />
-                                        ) : (
-                                            <Bot
-                                                size={
-                                                    28
-                                                }
-                                                className="text-white"
-                                            />
-                                        )}
-                                    </div>
-                                )
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Team Battle */}
-
-                    <div
-                        className="
-                            p-6
-                            grid
-                            md:grid-cols-2
-                            gap-5
-                        "
-                    >
-                        {winnerTeam.teams.map(
-                            (team: any) => {
-                                const members =
-                                    teamMembers[
-                                    team.id
-                                    ] || [];
-
-                                const isWinner =
-                                    team.id ===
-                                    winningTeamId;
-
-                                return (
-                                    <div
-                                        key={
-                                            team.id
-                                        }
-                                        className={`
-                                            relative
-                                            rounded-3xl
-                                            border
-                                            p-5
-                                            transition-all
-
-                                            ${isWinner
-                                                ? `
-                                                        border-yellow-400
-                                                        bg-yellow-500/10
-                                                        shadow-[0_0_40px_rgba(250,204,21,.25)]
-                                                        scale-[1.02]
-                                                      `
-                                                : `
-                                                        border-white/10
-                                                        bg-white/5
-                                                      `
-                                            }
-                                        `}
-                                    >
-                                        {isWinner && (
-                                            <div
-                                                className="
-                                                    absolute
-                                                    -top-5
-                                                    left-1/2
-                                                    -translate-x-1/2
-                                                "
-                                            >
-                                                <Crown
-                                                    size={
-                                                        34
-                                                    }
-                                                    className="
-                                                        text-yellow-400
-                                                    "
-                                                />
-                                            </div>
-                                        )}
-
-                                        <div
-                                            className="
-                                                text-center
-                                            "
-                                        >
-                                            <div
-                                                className="
-                                                    text-2xl
-                                                    font-black
-                                                    text-white
-                                                "
-                                            >
-                                                TEAM{" "}
-                                                {
-                                                    team.name
-                                                }
-                                            </div>
-
-                                            <div
-                                                className="
-                                                    mt-2
-                                                    text-sm
-                                                    text-slate-400
-                                                "
-                                            >
-                                                {members
-                                                    .map(
-                                                        (
-                                                            member: any
-                                                        ) =>
-                                                            member.id ===
-                                                                "P1"
-                                                                ? "You"
-                                                                : member.name
-                                                    )
-                                                    .join(
-                                                        " + "
-                                                    )}
-                                            </div>
-                                        </div>
-
-                                        <div
-                                            className="
-                                                grid
-                                                grid-cols-2
-                                                gap-4
-                                                mt-6
-                                            "
-                                        >
-                                            <div>
-                                                <div
-                                                    className="
-                                                        text-xs
-                                                        text-slate-500
-                                                        uppercase
-                                                    "
-                                                >
-                                                    Total
-                                                    Tricks
-                                                </div>
-
-                                                <div
-                                                    className="
-                                                        text-4xl
-                                                        font-black
-                                                        text-white
-                                                    "
-                                                >
-                                                    {
-                                                        team.totalTricks
-                                                    }
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div
-                                                    className="
-                                                        text-xs
-                                                        text-slate-500
-                                                        uppercase
-                                                    "
-                                                >
-                                                    Rounds
-                                                    Won
-                                                </div>
-
-                                                <div
-                                                    className="
-                                                        text-4xl
-                                                        font-black
-                                                        text-yellow-300
-                                                    "
-                                                >
-                                                    {
-                                                        team.roundsWon
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            }
-                        )}
-                    </div>
-
-                    {/* MVP */}
-
-                    <div className="px-6 pb-6">
-                        <div
-                            className="
-                                rounded-3xl
-                                border
-                                border-green-400/20
-                                bg-green-500/10
-                                p-5
-                                text-center
-                            "
-                        >
-                            <div
-                                className="
-                                    flex
-                                    items-center
-                                    justify-center
-                                    gap-2
-                                    text-green-300
-                                    font-bold
-                                    uppercase
-                                    tracking-widest
-                                    text-xs
-                                "
-                            >
-                                <Star size={14} />
-                                MVP
-                            </div>
-
-                            <div
-                                className="
-                                    mt-3
-                                    text-2xl
-                                    font-black
-                                    text-white
-                                "
-                            >
-                                {mvp.id === "P1"
-                                    ? "You"
-                                    : mvp.name}
-                            </div>
-
-                            <div
-                                className="
-                                    text-green-300
-                                    text-lg
-                                    font-bold
-                                "
-                            >
-                                {mvp.totalTricks} Tricks
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer */}
-
-                <div
-                    className="
-                        border-t
-                        border-white/10
-                        p-4
-                    "
-                >
+                    {/* Close */}
                     <button
                         onClick={closeModal}
                         className="
-                            w-full
-                            h-14
-                            rounded-2xl
-                            bg-green-500
-                            text-black
-                            font-black
+                            absolute
+                            top-3
+                            right-3
+                            z-20
+                            w-9
+                            h-9
+                            rounded-full
+                            bg-white/10
+                            hover:bg-white/20
                             flex
                             items-center
                             justify-center
-                            gap-3
+                            text-white
                             cursor-pointer
-                            hover:scale-[1.01]
-                            active:scale-[.98]
-                            transition-all
                         "
                     >
-                        <Home size={20} />
-                        Return To Lobby
+                        <X size={18} />
                     </button>
+
+                    {/* Scroll Area */}
+                    <div className="
+                        overflow-y-auto
+                        flex-1
+                        scrollbar-hide
+                    ">
+
+                        {/* Hero */}
+                        <div className="
+                            px-6
+                            pt-8
+                            pb-6
+                            text-center
+                        ">
+                            <div className="
+                                relative
+                                mx-auto
+                                mb-5
+                                w-24
+                                h-24
+                                rounded-full
+                                bg-gradient-to-b
+                                from-yellow-300
+                                to-amber-500
+                                animate-trophy-pulse
+                                overflow-hidden
+                                flex
+                                items-center
+                                justify-center
+                                shadow-[0_8px_30px_rgba(251,191,36,0.35)]
+                            ">
+                                <div className="absolute inset-0 overflow-hidden rounded-full">
+                                    <div className="
+                                        absolute
+                                        top-0
+                                        bottom-0
+                                        w-1/3
+                                        bg-white/40
+                                        blur-sm
+                                        animate-shine-sweep
+                                    " />
+                                </div>
+                                <Trophy
+                                    size={44}
+                                    className="text-black"
+                                />
+                            </div>
+
+                            <div className="
+                                text-amber-400
+                                font-bold
+                                uppercase
+                                tracking-[0.3em]
+                                text-xs
+                            ">
+                                Match Complete
+                            </div>
+
+                            <h1 className="
+                                mt-2
+                                text-4xl
+                                font-black
+                                bg-gradient-to-r
+                                from-yellow-200
+                                via-amber-400
+                                to-yellow-500
+                                bg-clip-text
+                                text-transparent
+                                animate-winner-pop
+                            ">
+                                TEAM{" "}
+                                {winningTeamData.name}
+                            </h1>
+
+                            <div className="
+                                mt-2
+                                inline-flex
+                                items-center
+                                gap-2
+                                text-white/70
+                                text-sm
+                            ">
+                                <Star size={14} className="text-amber-400" />
+                                Champion Team
+                                <Crown size={14} className="text-amber-400" />
+                            </div>
+
+                            {/* Winning team members */}
+                            <div className="
+                                mt-4
+                                flex
+                                items-center
+                                justify-center
+                                gap-2
+                            ">
+                                {winnerMembers.map((player: any) => (
+                                    <div
+                                        key={player.id}
+                                        className="
+                                            flex
+                                            items-center
+                                            gap-2
+                                            rounded-full
+                                            bg-white/5
+                                            border
+                                            border-amber-400/30
+                                            px-3
+                                            py-1.5
+                                        "
+                                    >
+                                        {player.id === HUMAN_PLAYER_ID
+                                            ? <User size={14} className="text-amber-300" />
+                                            : <Bot size={14} className="text-amber-300" />
+                                        }
+                                        <span className="text-sm font-bold text-white/90">
+                                            {memberName(player)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Team stats */}
+                        <div className="
+                            grid
+                            grid-cols-2
+                            gap-2
+                            px-4
+                            pb-5
+                        ">
+                            <div className="
+                                rounded-2xl
+                                bg-white/5
+                                border
+                                border-white/10
+                                px-3
+                                py-3
+                                text-center
+                            ">
+                                <div className="text-2xl font-black text-amber-400">
+                                    {winningTeamData.totalTricks}
+                                </div>
+                                <div className="text-[10px] uppercase tracking-widest text-white/50 mt-1">
+                                    Team Tricks Won
+                                </div>
+                            </div>
+                            <div className="
+                                rounded-2xl
+                                bg-white/5
+                                border
+                                border-white/10
+                                px-3
+                                py-3
+                                text-center
+                            ">
+                                <div className="text-2xl font-black text-amber-400">
+                                    {winningTeamData.roundsWon}
+                                </div>
+                                <div className="text-[10px] uppercase tracking-widest text-white/50 mt-1">
+                                    Rounds Won
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* MVP */}
+                        {mvp && (
+                            <div className="px-4 pb-3">
+                                <div className="
+                                    rounded-2xl
+                                    bg-gradient-to-r
+                                    from-amber-500/15
+                                    to-yellow-500/5
+                                    border
+                                    border-amber-400/30
+                                    px-4
+                                    py-3
+                                    flex
+                                    items-center
+                                    justify-between
+                                ">
+                                    <div className="flex items-center gap-3">
+                                        <div className="
+                                            w-10
+                                            h-10
+                                            rounded-full
+                                            bg-gradient-to-b
+                                            from-yellow-300
+                                            to-amber-500
+                                            flex
+                                            items-center
+                                            justify-center
+                                        ">
+                                            <Star size={18} className="text-black" />
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] uppercase tracking-widest text-amber-300/80">
+                                                Match MVP
+                                            </div>
+                                            <div className="text-white font-black">
+                                                {memberName(mvp)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xl font-black text-white">
+                                            {mvp.totalTricks}
+                                        </div>
+                                        <div className="text-[10px] uppercase tracking-widest text-white/50">
+                                            tricks
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Team standings */}
+                        <div className="px-4 pb-5 space-y-1.5">
+                            {standings.map((team: any, index: number) => (
+                                <div
+                                    key={team.id}
+                                    className={`
+                                        flex
+                                        items-center
+                                        justify-between
+                                        rounded-xl
+                                        px-3
+                                        py-2.5
+                                        border
+                                        ${team.id === winningTeamId
+                                            ? "bg-amber-500/10 border-amber-400/40"
+                                            : "bg-white/5 border-white/10"
+                                        }
+                                    `}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`
+                                            w-7
+                                            h-7
+                                            rounded-full
+                                            flex
+                                            items-center
+                                            justify-center
+                                            ${index === 0
+                                                ? "bg-gradient-to-b from-yellow-300 to-amber-500"
+                                                : index === 1
+                                                    ? "bg-slate-500/80"
+                                                    : "bg-slate-700/80"
+                                            }
+                                        `}>
+                                            {index === 0
+                                                ? <Crown size={14} className="text-black" />
+                                                : <Medal size={14} className="text-white" />
+                                            }
+                                        </div>
+                                        <div className="text-sm font-black text-white">
+                                            {team.name}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-sm">
+                                        <div className="text-white/60">
+                                            <span className="font-black text-white">
+                                                {team.totalTricks}
+                                            </span>
+                                            {" tricks"}
+                                        </div>
+                                        <div className="text-white/60">
+                                            <span className="font-black text-white">
+                                                {team.roundsWon}
+                                            </span>
+                                            {" rounds"}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="
+                        border-t
+                        border-white/10
+                        p-4
+                    ">
+                        <button
+                            onClick={closeModal}
+                            className="
+                                w-full
+                                h-13
+                                rounded-2xl
+                                bg-gradient-to-r
+                                from-green-500
+                                to-emerald-500
+                                text-black
+                                font-black
+                                flex
+                                items-center
+                                justify-center
+                                gap-3
+                                cursor-pointer
+                                hover:scale-[1.01]
+                                active:scale-[.98]
+                                transition-all
+                            "
+                        >
+                            <Home size={20} />
+                            Back to Home
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    );
+    )
 }

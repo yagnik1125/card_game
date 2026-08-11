@@ -3,6 +3,7 @@ import {
     Bot,
     User,
 } from "lucide-react";
+import { HUMAN_PLAYER_ID } from "@/utils/constants";
 
 interface Props {
     roundWinnerTeam: any | null;
@@ -216,7 +217,7 @@ export default function RoundWinnerTeamModal({
                                                 `}
                                             >
                                                 {member.id ===
-                                                "P1" ? (
+                                                HUMAN_PLAYER_ID ? (
                                                     <User size={24} />
                                                 ) : (
                                                     <Bot size={24} />
@@ -240,7 +241,7 @@ export default function RoundWinnerTeamModal({
                                         .map(
                                             (m: any) =>
                                                 m.id ===
-                                                "P1"
+                                                HUMAN_PLAYER_ID
                                                     ? "You"
                                                     : m.name
                                         )

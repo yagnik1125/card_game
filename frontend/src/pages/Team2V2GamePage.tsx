@@ -1,4 +1,5 @@
 import {
+    useCallback,
     useEffect,
     useRef,
 } from "react";
@@ -8,9 +9,11 @@ import {
     useSelector,
 } from "react-redux";
 import {
+    useNavigate,
     useParams,
 } from "react-router-dom";
 import {
+    getLegalMoves,
     getView,
     playTurn,
 } from "@/api/gameApi";
@@ -18,6 +21,7 @@ import {
     type RootState,
 } from "@/store/store";
 import {
+    resetGameState,
     setSnapshot,
     setAnimating,
     setDealing,
@@ -27,7 +31,12 @@ import {
     setRoundWinnerTeam,
     setWinnerTeam,
     setTrickWinner,
+    setTrickCollect,
+    setLoadError,
+    setPlayError,
 } from "@/store/slices/gameSlice";
+import { HUMAN_PLAYER_ID } from "@/utils/constants";
+import { extractErrorMessage } from "@/utils/errors";
 import GameLoader from "@/components/common/GameLoader";
 import TrumpDeclarationModal from "@/components/common/TrumpDeclarationModal";
 import GameBoardTeam from "@/components/teams2v2/GameBoardTeam";
@@ -37,6 +46,7 @@ import WinnerTeamModal from "@/components/teams2v2/WinnerTeamModal";
 
 export default function Team2V2GamePage() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { gameId } = useParams();
     const snapshot = useSelector(
         (state: RootState) => state.game.snapshot
@@ -59,11 +69,20 @@ export default function Team2V2GamePage() {
     const roundWinnerTeam = useSelector(
         (state: RootState) => state.game.roundWinnerTeam
     );
+    const dealing = useSelector(
+        (state: RootState) => state.game.dealing
+    );
+    const loadError = useSelector(
+        (state: RootState) => state.game.loadError
+    );
+    const playError = useSelector(
+        (state: RootState) => state.game.playError
+    );
     const playingRef = useRef(false);
+    const cancelledRef = useRef(false);
 
     const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     const waitNextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-    const dealing = useSelector((state: RootState) => state.game.dealing);
     const dealingRef = useRef(dealing);
 
     useEffect(() => {
@@ -76,25 +95,45 @@ export default function Team2V2GamePage() {
         }
     };
 
-    const load = async () => {
-        if (!gameId) return;
-        const view = await getView(gameId);
-        const trickCards = view.currentTrick.plays.map((play: any) => ({
-            playerId: play.playerId,
-            suit: play.card.suit,
-            rank: play.card.rank
-        }));
+    const load = useCallback(async () => {
+        if (!gameId) {
+            return;
+        }
+        try {
+            const view = await getView(gameId);
+            if (cancelledRef.current) {
+                return;
+            }
+            const trickCards = view.currentTrick.plays.map((play: any) => ({
+                playerId: play.playerId,
+                suit: play.card.suit,
+                rank: play.card.rank
+            }));
 
-        dispatch(setDealing(true));
-        dispatch(setTrickCards(trickCards));
-        dispatch(setSnapshot(view));
-        await waitNextFrame();
-        await wait(1600);
-        dispatch(setDealing(false));
-    };
+            dispatch(setDealing(true));
+            dispatch(setTrickCards(trickCards));
+            dispatch(setSnapshot(view));
+            await waitNextFrame();
+            await wait(1600);
+            dispatch(setDealing(false));
+        } catch (error) {
+            if (!cancelledRef.current) {
+                console.error(error);
+                dispatch(setLoadError(true));
+            }
+        }
+    }, [gameId, dispatch]);
+
     useEffect(() => {
+        dispatch(resetGameState());
+        dispatch(setLoadError(false));
+        dispatch(setPlayError(null));
+        cancelledRef.current = false;
         load();
-    }, [gameId]);
+        return () => {
+            cancelledRef.current = true;
+        };
+    }, [gameId, load, dispatch]);
 
     const handlePlay = async (cardId: string) => {
         if (!gameId) {
@@ -104,11 +143,12 @@ export default function Team2V2GamePage() {
             return;
         }
         playingRef.current = true;
+        dispatch(setPlayError(null));
         dispatch(
             setAnimating(true)
         );
         try {
-            const result = await playTurn(gameId, "P1", cardId);
+            const result = await playTurn(gameId, HUMAN_PLAYER_ID, cardId);
             let cards: any[] = [...trickCards];
             let latestSnapshot = snapshot;
             for (const event of result.events) {
@@ -128,8 +168,8 @@ export default function Team2V2GamePage() {
                         ...latestSnapshot,
                         currentPlayerId: event.playerId,
                         players: latestSnapshot.players.map(
-                            (p: any) => p.id === "P1" && event.playerId === "P1"
-                                ? { ...p, hand: p.hand.filter((c: any) => c.id !== event.cardId) }
+                            (p: any) => p.id === HUMAN_PLAYER_ID && event.playerId === HUMAN_PLAYER_ID
+                                ? { ...p, hand: p.hand?.filter((c: any) => c.id !== event.cardId) }
                                 : p
                         )
                     };
@@ -139,26 +179,62 @@ export default function Team2V2GamePage() {
                     await wait(700);
                 }
                 if (event.type === "TRUMP_DECLARED") {
+                    const suit = event.suit ?? result.snapshot.trumpSuit;
                     latestSnapshot = {
                         ...latestSnapshot,
-                        trumpSuit: result.snapshot.trumpSuit,
+                        trumpSuit: suit,
                     };
-                    dispatch(setTrumpDeclaration(result.snapshot.trumpSuit));
+                    dispatch(setTrumpDeclaration(suit));
                     dispatch(setSnapshot(latestSnapshot));
                     await wait(2000);
                     dispatch(setTrumpDeclaration(null));
                 }
                 if (event.type === "TRICK_COMPLETED") {
+                    const finalPlayers = result.snapshot?.players;
+                    const finalTeams = result.snapshot?.teams;
+                    if (finalPlayers && finalTeams) {
+                        latestSnapshot = {
+                            ...latestSnapshot,
+                            players: latestSnapshot.players.map(
+                                (p: any) => {
+                                    const finalP = finalPlayers.find(
+                                        (fp: any) => fp.id === p.id
+                                    );
+                                    return finalP
+                                        ? {
+                                              ...p,
+                                              tricksWonRound: finalP.tricksWonRound,
+                                              totalTricks: finalP.totalTricks,
+                                          }
+                                        : p;
+                                }
+                            ),
+                            teams: latestSnapshot.teams.map(
+                                (t: any) => {
+                                    const finalT = finalTeams.find(
+                                        (ft: any) => ft.id === t.id
+                                    );
+                                    return finalT
+                                        ? {
+                                              ...t,
+                                              tricksWonRound: finalT.tricksWonRound,
+                                              totalTricks: finalT.totalTricks,
+                                              roundsWon: finalT.roundsWon,
+                                          }
+                                        : t;
+                                }
+                            ),
+                        };
+                        dispatch(setSnapshot(latestSnapshot));
+                    }
+                    if (event.trickWinner?.id) {
+                        dispatch(setTrickCollect(event.trickWinner.id));
+                        await wait(700);
+                    }
                     dispatch(setTrickCards([]));
                     cards = [];
-                    await new Promise(r => requestAnimationFrame(() => r(null)));
-                    latestSnapshot = result.snapshot;
-                    dispatch(
-                        setSnapshot({
-                            ...latestSnapshot,
-                            currentPlayerId: event.playerId
-                        })
-                    );
+                    dispatch(setTrickCollect(null));
+                    await waitNextFrame();
                     dispatch(setTrickWinnerTeam(event.trickWinnerTeam));
                     dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
@@ -166,11 +242,16 @@ export default function Team2V2GamePage() {
                     dispatch(setTrickWinnerTeam(null));
                 }
                 if (event.type === "ROUND_COMPLETED") {
-                    dispatch(setDealing(true));
+                    latestSnapshot = result.snapshot;
+                    dispatch(setSnapshot(result.snapshot));
+                    if (event.trickWinner?.id) {
+                        dispatch(setTrickCollect(event.trickWinner.id));
+                        await wait(700);
+                    }
                     dispatch(setTrickCards([]));
                     cards = [];
-                    latestSnapshot = result.snapshot;
-                    dispatch(setSnapshot({ ...latestSnapshot, currentPlayerId: event.playerId }));
+                    dispatch(setTrickCollect(null));
+                    dispatch(setDealing(true));
                     dispatch(setTrickWinnerTeam(event.trickWinnerTeam));
                     dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
@@ -184,15 +265,13 @@ export default function Team2V2GamePage() {
                     dispatch(setDealing(false));
                 }
                 if (event.type === "MATCH_COMPLETED") {
+                    if (event.trickWinner?.id) {
+                        dispatch(setTrickCollect(event.trickWinner.id));
+                        await wait(700);
+                    }
                     dispatch(setTrickCards([]));
                     cards = [];
-                    latestSnapshot = result.snapshot;
-                    dispatch(
-                        setSnapshot({
-                            ...latestSnapshot,
-                            currentPlayerId: event.playerId
-                        })
-                    );
+                    dispatch(setTrickCollect(null));
                     dispatch(setTrickWinnerTeam(event.trickWinnerTeam));
                     dispatch(setTrickWinner(event.trickWinner));
                     await wait(1000);
@@ -207,12 +286,24 @@ export default function Team2V2GamePage() {
 
             dispatch(setSnapshot(result.snapshot));
 
+            if (!result.snapshot.completed && result.snapshot.currentPlayerId === HUMAN_PLAYER_ID) {
+                try {
+                    const legalCards = await getLegalMoves(gameId, HUMAN_PLAYER_ID);
+                    dispatch(setSnapshot({
+                        ...result.snapshot,
+                        legalMoves: legalCards.map((c) => c.id),
+                    }));
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
             if (result.snapshot.completed) {
                 dispatch(setWinnerTeam(result.snapshot));
             }
         } catch (error) {
             console.error(error);
-            alert("Failed to play card");
+            dispatch(setPlayError(extractErrorMessage(error, "Failed to play card")));
         } finally {
             playingRef.current = false;
             dispatch(
@@ -222,11 +313,93 @@ export default function Team2V2GamePage() {
     };
 
     if (!snapshot) {
+        if (loadError) {
+            return (
+                <div className="
+                    min-h-screen
+                    bg-slate-950
+                    flex
+                    flex-col
+                    items-center
+                    justify-center
+                    gap-6
+                    text-white
+                    px-4
+                ">
+                    <div className="text-2xl font-semibold">
+                        Failed to load game
+                    </div>
+                    <div className="text-white/60 text-center max-w-sm">
+                        Could not reach the server. Check that the backend is running.
+                    </div>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => {
+                                dispatch(setLoadError(false));
+                                load();
+                            }}
+                            className="
+                                px-6
+                                py-3
+                                rounded-xl
+                                bg-green-600
+                                hover:bg-green-500
+                                font-semibold
+                                cursor-pointer
+                            "
+                        >
+                            Retry
+                        </button>
+                        <button
+                            onClick={() => navigate("/")}
+                            className="
+                                px-6
+                                py-3
+                                rounded-xl
+                                bg-white/10
+                                hover:bg-white/20
+                                font-semibold
+                                cursor-pointer
+                            "
+                        >
+                            Back to Home
+                        </button>
+                    </div>
+                </div>
+            );
+        }
         return <GameLoader />;
     }
 
     return (
         <>
+            {playError && (
+                <div className="
+                    fixed
+                    top-4
+                    left-1/2
+                    -translate-x-1/2
+                    z-300
+                    flex
+                    items-center
+                    gap-4
+                    bg-red-600/90
+                    text-white
+                    px-5
+                    py-3
+                    rounded-xl
+                    shadow-lg
+                ">
+                    <span>{playError}</span>
+                    <button
+                        onClick={() => dispatch(setPlayError(null))}
+                        className="cursor-pointer font-bold"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
+
             <GameBoardTeam onPlay={handlePlay} />
 
             <TrumpDeclarationModal suit={trumpDeclaration} />

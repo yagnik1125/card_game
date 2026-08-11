@@ -4,15 +4,16 @@ import type { RootState } from "@/store/store";
 import AvatarTeam from "./AvatarTeam";
 import PlayerHand from "../common/PlayerHand";
 import Card from "../common/Card";
-import { suitMap } from "@/utils/constants";
+import { HUMAN_PLAYER_ID, suitMap } from "@/utils/constants";
 import {
-    LogOut
+    LogOut,
+    Trophy,
 } from "lucide-react";
 
 import {
     useNavigate
 } from "react-router-dom";
-import { setSnapshot, setWinner, setTrickCards, setAnimating, setDealing } from "@/store/slices/gameSlice";
+import { setSnapshot, setWinner, setTrickCards, setAnimating, setDealing, setTrickCollect } from "@/store/slices/gameSlice";
 import { removeGame } from "@/api/gameApi";
 import { BotCards } from "../common/BotCards";
 
@@ -35,7 +36,7 @@ export default function GameBoardTeam({
         (state: RootState) => state.game.animating
     );
     const player = snapshot.players.find(
-        (p: any) => p.id === "P1"
+        (p: any) => p.id === HUMAN_PLAYER_ID
     );
     const left = snapshot.players.find(
         (p: any) => p.id === "P2"
@@ -49,40 +50,49 @@ export default function GameBoardTeam({
     const dealing = useSelector(
         (state: RootState) => state.game.dealing
     )
+    const trickCollect = useSelector(
+        (state: RootState) => state.game.trickCollect
+    )
 
-    const quitGame = async () => {
-        // console.log(snapshot.gameId);
+    const quitGame = () => {
         const gameId = snapshot.gameId;
         dispatch(setSnapshot(null));
         dispatch(setWinner(null));
         dispatch(setTrickCards([]));
         dispatch(setAnimating(false));
         dispatch(setDealing(false));
-        await removeGame(gameId);
+        dispatch(setTrickCollect(null));
         navigate("/");
+        removeGame(gameId).catch((error) => console.error(error));
     };
 
     return (
-        <div className="bg-green-900 min-h-screen flex justify-center py-3">
-            <div className="relative w-[98vw] max-w-425 h-[96vh] rounded-3xl border-[6px] border-green-400/40 bg-[#0f5d2d] shadow-[0_0_80px_rgba(0,0,0,0.5)] overflow-hidden">
+        <div className="bg-[#04260f] min-h-screen flex justify-center py-3">
+            <div className="relative w-[98vw] max-w-425 h-[96vh] rounded-3xl border-[6px] border-amber-200/25 bg-[#0b5227] shadow-[0_0_80px_rgba(0,0,0,0.6)] overflow-hidden">
                 <div
                     className="
                         absolute
                         inset-2
                         rounded-[22px]
                         border
-                        border-white/10
+                        border-amber-100/15
                         pointer-events-none
                     "
                 />
+                {/* Decorative corner suits */}
+                <div className="absolute top-3 left-4 text-lg text-amber-100/15 pointer-events-none select-none">♠</div>
+                <div className="absolute top-3 right-4 text-lg text-amber-100/15 pointer-events-none select-none">♥</div>
+                <div className="absolute bottom-3 left-4 text-lg text-amber-100/15 pointer-events-none select-none">♦</div>
+                <div className="absolute bottom-3 right-4 text-lg text-amber-100/15 pointer-events-none select-none">♣</div>
                 {/* Table Lighting */}
                 <div className="
                     absolute
                     inset-0
                     pointer-events-none
                     rounded-3xl
+                    table-felt
                 ">
-                    <div className="absolute inset-0 bg-linear-to-b from-white/5 via-transparent to-black/30" />
+                    <div className="absolute inset-0 bg-linear-to-b from-white/5 via-transparent to-black/40" />
                     <div className="
                         absolute
                         left-1/2
@@ -101,7 +111,7 @@ export default function GameBoardTeam({
                         bg-radial
                         from-transparent
                         via-transparent
-                        to-black/40
+                        to-black/50
                     "/>
                 </div>
 
@@ -114,29 +124,45 @@ export default function GameBoardTeam({
                             px-5
                             py-4
                             rounded-3xl
-                            bg-black/35
+                            bg-black/40
                             backdrop-blur-xl
                             border
-                            border-white/10
+                            border-amber-200/20
                             shadow-2xl
                             shadow-black/40
                             text-white
                         "
                     >
                         <div className="
-                            text-[10px]
-                            uppercase
-                            tracking-[0.25em]
-                            text-white/60
-                            mb-1
+                            flex
+                            items-center
+                            gap-1.5
+                            mb-1.5
                         ">
-                            Round
+                            <span className="
+                                inline-block
+                                w-1.5
+                                h-1.5
+                                rotate-45
+                                bg-amber-300/80
+                            " />
+                            <div className="
+                                text-[10px]
+                                uppercase
+                                tracking-[0.25em]
+                                text-amber-200/70
+                            ">
+                                Round
+                            </div>
                         </div>
 
                         <div className="
                             text-4xl
                             font-black
+                            font-display
                             leading-none
+                            text-amber-50
+                            drop-shadow-[0_0_10px_rgba(251,191,36,0.25)]
                         ">
                             {snapshot.roundNumber}
                         </div>
@@ -152,20 +178,22 @@ export default function GameBoardTeam({
                             px-5
                             py-4
                             rounded-3xl
-                            bg-black/35
+                            bg-black/40
                             backdrop-blur-xl
                             border
-                            border-yellow-400/20
+                            border-amber-200/20
                             shadow-2xl
-                            shadow-yellow-500/10
+                            shadow-amber-500/10
                             text-white
+                            text-center
                         "
                     >
                         <div className="
                             text-[10px]
                             uppercase
                             tracking-[0.25em]
-                            text-white/60
+                            text-amber-200/70
+                            mb-1.5
                         ">
                             Trump Suit
                         </div>
@@ -174,9 +202,21 @@ export default function GameBoardTeam({
                             flex
                             items-center
                             justify-center
-                            gap-2
                         ">
-                            <span className="text-5xl leading-none">
+                            <span className="
+                                w-13
+                                h-13
+                                rounded-full
+                                bg-amber-400/15
+                                border
+                                border-amber-300/30
+                                flex
+                                items-center
+                                justify-center
+                                text-4xl
+                                leading-none
+                                shadow-[0_0_18px_rgba(251,191,36,0.25)]
+                            ">
                                 {snapshot.trumpSuit
                                     ? suitMap[snapshot.trumpSuit]
                                     : "?"
@@ -193,10 +233,10 @@ export default function GameBoardTeam({
                         className="
                             w-fit
                             rounded-3xl
-                            bg-black/35
+                            bg-black/40
                             backdrop-blur-xl
                             border
-                            border-white/10
+                            border-amber-200/20
                             shadow-2xl
                             shadow-black/40
                             overflow-hidden
@@ -204,18 +244,22 @@ export default function GameBoardTeam({
                     >
                         <div
                             className="
-                                px-2
+                                px-3
                                 py-2
                                 border-b
                                 border-white/10
                                 text-white
+                                flex
+                                items-center
+                                gap-2
                             "
                         >
+                            <Trophy size={12} className="text-amber-300" />
                             <div className="
                                 text-[10px]
                                 uppercase
                                 tracking-[0.25em]
-                                text-white/60
+                                text-amber-200/70
                             ">
                                 Total Tricks
                             </div>
@@ -248,8 +292,8 @@ export default function GameBoardTeam({
                                                 h-2
                                                 rounded-full
                                                 ${t.id === "TEAM_A"
-                                                    ? "bg-green-400"
-                                                    : "bg-white/50"
+                                                    ? "bg-amber-300 shadow-[0_0_6px_rgba(251,191,36,0.6)]"
+                                                    : "bg-white/40"
                                                 }
                                             `}
                                         />
@@ -271,7 +315,10 @@ export default function GameBoardTeam({
                                             text-center
                                             rounded-lg
                                             font-black
-                                            ${t.id === "TEAM_A" ? "bg-green-400 text-black" : "bg-white/10"}
+                                            ${t.id === "TEAM_A"
+                                                ? "bg-linear-to-br from-amber-300 to-yellow-500 text-black shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+                                                : "bg-white/10 text-white"
+                                            }
                                         `}
                                     >
                                         {t.totalTricks}
@@ -285,9 +332,11 @@ export default function GameBoardTeam({
                 {/* Top */}
 
                 <div className="absolute top-[0%] left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
-                    {!dealing && <BotCards
+                    <BotCards
                         count={top.cardsRemaining}
-                    />}
+                        dealing={dealing}
+                        seat="top"
+                    />
                     <AvatarTeam
                         player={top}
                         champion={snapshot.championTeam === top.teamId}
@@ -299,10 +348,12 @@ export default function GameBoardTeam({
                 {/* Left */}
 
                 <div className="absolute left-[2%] top-1/2 -translate-y-1/2 z-10 flex items-center gap-3">
-                    {!dealing && <BotCards
+                    <BotCards
                         count={left.cardsRemaining}
                         vertical
-                    />}
+                        dealing={dealing}
+                        seat="left"
+                    />
                     <AvatarTeam
                         player={left}
                         champion={snapshot.championTeam === left.teamId}
@@ -320,10 +371,12 @@ export default function GameBoardTeam({
                         active={snapshot.currentPlayerId === right.id}
                         teamName={snapshot.teams.find((t: { id: any; }) => t.id === right.teamId).name}
                     />
-                    {!dealing && <BotCards
+                    <BotCards
                         count={right.cardsRemaining}
                         vertical
-                    />}
+                        dealing={dealing}
+                        seat="right"
+                    />
                 </div>
 
                 {/* Center Deck Shown after round completion */}
@@ -342,78 +395,133 @@ export default function GameBoardTeam({
                         : "opacity-0 scale-75 pointer-events-none"}
                     `}
                 >
+                    {dealing && (
+                        <div className="
+                            absolute
+                            -inset-4
+                            rounded-3xl
+                            bg-amber-300/20
+                            blur-2xl
+                            animate-deck-halo
+                        " />
+                    )}
                     <div className="
                         w-18
                         h-26
                         rounded-xl
                         border-2
-                        border-white
+                        border-amber-200/80
                         shadow-2xl
+                        shadow-black/50
                         bg-red-900
                         relative
                         overflow-hidden
+                        animate-deck-float
                     ">
                         <div className="
                             absolute
                             inset-0
                             bg-linear-to-br
-                            from-red-700
+                            from-red-600
+                            via-red-800
                             to-red-950
                         "/>
                         <div className="
                             absolute
-                            inset-2
+                            inset-1
                             border
-                            border-yellow-300
+                            border-amber-300/70
                             rounded-lg
                         "/>
+                        <div className="
+                            absolute
+                            inset-2.5
+                            border
+                            border-red-300/20
+                            rounded
+                        "/>
+                        <div className="
+                            absolute
+                            inset-0
+                            flex
+                            items-center
+                            justify-center
+                            text-xl
+                            text-amber-200/60
+                        ">
+                            ◆
+                        </div>
                     </div>
+                    {dealing && (
+                        <div className="
+                            mt-2
+                            text-center
+                            text-[10px]
+                            uppercase
+                            tracking-[0.3em]
+                            text-amber-200/80
+                            font-semibold
+                        ">
+                            Dealing
+                        </div>
+                    )}
                 </div>
 
                 {/* Trick Area */}
 
                 <div className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-[70%] h-[60%]">
-                    <div className="absolute inset-0 rounded-full border-4 border-white/10 bg-black/10 backdrop-blur-sm shadow-inner shadow-black/50" />
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-white/5 blur-3xl" />
+                    <div className="
+                        absolute
+                        inset-0
+                        rounded-full
+                        border-2
+                        border-amber-200/25
+                        bg-black/15
+                        backdrop-blur-sm
+                        shadow-inner
+                        shadow-black/60
+                    " />
+                    <div className="
+                        absolute
+                        inset-2
+                        rounded-full
+                        border
+                        border-amber-100/10
+                    " />
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-44 h-44 rounded-full bg-white/5 blur-3xl" />
                     {trickCards.map((play: any) => {
                         let style: any = {};
+                        let animationClass = "";
 
                         switch (play.playerId) {
-                            case "P1":
-                                style = {
-                                    bottom: "8%",
-                                    left: "50%",
-                                    transform: "translateX(-50%)",
-                                };
+                            case HUMAN_PLAYER_ID:
+                                style = { left: "50%", top: "82%" };
+                                animationClass = "animate-card-play-bottom";
                                 break;
                             case "P2":
-                                style = {
-                                    left: "30%",
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                };
+                                style = { left: "42%", top: "50%" };
+                                animationClass = "animate-card-play-left";
                                 break;
                             case "P3":
-                                style = {
-                                    top: "8%",
-                                    left: "50%",
-                                    transform: "translateX(-50%)",
-                                };
+                                style = { left: "50%", top: "17%" };
+                                animationClass = "animate-card-play-top";
                                 break;
                             case "P4":
-                                style = {
-                                    right: "30%",
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                };
+                                style = { left: "58%", top: "50%" };
+                                animationClass = "animate-card-play-right";
                                 break;
                         }
+
+                        const collecting = trickCollect !== null;
 
                         return (
                             <div
                                 key={`${play.playerId}-${play.rank}-${play.suit}`}
-                                className="absolute scale-[0.85] transition-all duration-500 ease-out"
-                                style={style}
+                                className={`absolute ${collecting ? `animate-card-collect-${trickCollect}` : animationClass}`}
+                                style={{
+                                    ...style,
+                                    transform: "translate(-50%, -50%)",
+                                }}
                             >
                                 <Card
                                     card={{
@@ -453,20 +561,22 @@ export default function GameBoardTeam({
                             h-14
                             px-5
                             rounded-2xl
-                            bg-black/35
+                            bg-black/40
                             backdrop-blur-xl
                             border
-                            border-white/10
+                            border-amber-200/20
                             text-white
                             flex
                             items-center
                             gap-3
                             cursor-pointer
-                            hover:bg-red-600/80
+                            hover:bg-red-600/90
+                            hover:border-red-400/50
                             transition-all
                             hover:scale-105
                             active:scale-95
                             shadow-xl
+                            shadow-black/40
                         "
                     >
                         <LogOut size={20} />

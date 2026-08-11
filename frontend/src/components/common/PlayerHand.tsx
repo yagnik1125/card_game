@@ -22,10 +22,13 @@ export default function PlayerHand({ cards, legalMoves, trumpSuit, onPlay, disab
     const dealing = useSelector(
         (state: RootState) => state.game.dealing
     );
+    const count = sortedCards.length;
+    const cardPitch = 66;
     return (
         <div className="flex justify-center px-8">
             {sortedCards.map((card, index) => {
                 const legal = legalMoves.includes(card.id);
+                const centerOffset = (index - (count - 1) / 2) * cardPitch;
 
                 return (
                     <div
@@ -39,9 +42,11 @@ export default function PlayerHand({ cards, legalMoves, trumpSuit, onPlay, disab
                         `}
                         style={{
                             zIndex: index,
-                            transform: dealing ? "translate(-35vw,-30vh) scale(0)" : "translate(0,0) scale(1)",
+                            transform: dealing
+                                ? `translate(${-centerOffset}px, -38vh) scale(0.3)`
+                                : undefined,
                             opacity: dealing ? 0 : 1,
-                            transitionDelay: `${index * 120}ms`
+                            transitionDelay: `${index * 90}ms`
                         }}
                     >
                         <Card

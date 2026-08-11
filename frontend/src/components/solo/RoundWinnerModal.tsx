@@ -4,6 +4,7 @@ import {
     Bot,
     User,
 } from "lucide-react";
+import { HUMAN_PLAYER_ID } from "@/utils/constants";
 
 interface Props {
     roundWinner: any | null;
@@ -14,7 +15,7 @@ export default function RoundWinnerModal({
 }: Props) {
     if (!roundWinner) return null;
 
-    const winnerName = roundWinner.id === "P1" ? "You" : roundWinner.name ?? "Unknown";
+    const winnerName = roundWinner.id === HUMAN_PLAYER_ID ? "You" : roundWinner.name ?? "Unknown";
 
     return (
         <div
@@ -114,7 +115,7 @@ export default function RoundWinnerModal({
                             player.id === roundWinner.id;
 
                         const isHuman =
-                            player.id === "P1";
+                            player.id === HUMAN_PLAYER_ID;
 
                         return (
                             <div

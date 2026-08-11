@@ -1,3 +1,5 @@
+export const HUMAN_PLAYER_ID = "P1";
+
 export const suitMap: any = {
     HEARTS: "♥️",
     DIAMONDS: "♦️",
