@@ -7,7 +7,12 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/src/server.js"
+    "typecheck": "tsc -p tsconfig.test.json",
+    "start": "node dist/src/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "ws:test": "tsx scripts/wsTestClient.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,8 +29,10 @@
     "@types/express": "^5.0.6",
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.9.1",
-    "@types/socket.io": "^3.0.2",
+    "@vitest/coverage-v8": "^4.1.10",
+    "socket.io-client": "^4.8.3",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
   }
 }

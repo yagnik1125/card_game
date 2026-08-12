@@ -1,5 +1,6 @@
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
+import { HUMAN_PLAYER_ID } from "@/utils/constants";
 import {
     Trophy,
     Crown,
@@ -23,7 +24,7 @@ export default function TrickWinnerModal({
         return null;
     }
 
-    const isHuman = trickWinner.id === "P1";
+    const isHuman = trickWinner.id === HUMAN_PLAYER_ID;
 
     const playerName = isHuman
         ? "You"

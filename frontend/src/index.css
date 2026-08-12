@@ -1,4 +1,11 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Poppins:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
+
+@theme {
+    --font-display: "Cinzel", ui-serif, Georgia, serif;
+    --font-body: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
+
 @keyframes orbit {
     from {
         transform: rotate(0deg);
@@ -16,24 +23,472 @@
     scrollbar-width: none;
 }
 
-@keyframes cardPlay {
-    0% {
-        transform:
-            translate(-50%, 0)
-            scale(1);
+@keyframes cardPlayBottom {
+    from {
+        transform: translate(-50%, 32vh) scale(0.8);
+        opacity: 0.3;
     }
-
-    100% {
-        transform:
-            translate(-50%, -260px)
-            scale(0.85);
+    to {
+        transform: translate(-50%, -50%) scale(0.85);
+        opacity: 1;
     }
 }
 
-.animate-card-play {
-    animation:
-        cardPlay
-        450ms
-        ease-out
-        forwards;
+@keyframes cardPlayLeft {
+    from {
+        transform: translate(-45vw, -50%) scale(0.8);
+        opacity: 0.3;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(0.85);
+        opacity: 1;
+    }
+}
+
+@keyframes cardPlayTop {
+    from {
+        transform: translate(-50%, -32vh) scale(0.8);
+        opacity: 0.3;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(0.85);
+        opacity: 1;
+    }
+}
+
+@keyframes cardPlayRight {
+    from {
+        transform: translate(45vw, -50%) scale(0.8);
+        opacity: 0.3;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(0.85);
+        opacity: 1;
+    }
+}
+
+.animate-card-play-bottom {
+    animation: cardPlayBottom 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-card-play-left {
+    animation: cardPlayLeft 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-card-play-top {
+    animation: cardPlayTop 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-card-play-right {
+    animation: cardPlayRight 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes winnerPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.6) translateY(24px);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.08) translateY(-4px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.animate-winner-pop {
+    animation: winnerPop 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes trophyPulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55);
+    }
+    50% {
+        box-shadow: 0 0 0 22px rgba(251, 191, 36, 0);
+    }
+}
+
+.animate-trophy-pulse {
+    animation: trophyPulse 2s ease-out infinite;
+}
+
+@keyframes glowBreath {
+    0%,
+    100% {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 0.9;
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+}
+
+.animate-glow-breath {
+    animation: glowBreath 3.2s ease-in-out infinite;
+}
+
+@keyframes spinBorder {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spinBorder 5s linear infinite;
+}
+
+@keyframes shineSweep {
+    0% {
+        transform: translateX(-160%) skewX(-20deg);
+    }
+    100% {
+        transform: translateX(260%) skewX(-20deg);
+    }
+}
+
+.animate-shine-sweep {
+    animation: shineSweep 2.4s ease-in-out infinite;
+}
+
+@keyframes medalBounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.animate-medal-bounce {
+    animation: medalBounce 1.6s ease-in-out infinite;
+}
+
+@keyframes floatSuit {
+    0% {
+        transform: translateY(110vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.5;
+    }
+    80% {
+        opacity: 0.3;
+    }
+    100% {
+        transform: translateY(-15vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.animate-float-suit {
+    animation: floatSuit linear infinite;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-up {
+    animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes titleGlow {
+    0%,
+    100% {
+        filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.35));
+    }
+    50% {
+        filter: drop-shadow(0 0 28px rgba(251, 191, 36, 0.7));
+    }
+}
+
+.animate-title-glow {
+    animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes suitBounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.animate-suit-bounce {
+    animation: suitBounce 2.4s ease-in-out infinite;
+}
+
+@keyframes bookBreathe {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.animate-book-breathe {
+    animation: bookBreathe 6s ease-in-out infinite;
+}
+
+.rulebook-flip {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 50%;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    z-index: 30;
+    pointer-events: none;
+}
+
+@keyframes rulebookFlipNext {
+    0% {
+        transform: perspective(2400px) rotateY(0deg) rotateX(0deg) translateZ(0px);
+    }
+    45% {
+        transform: perspective(2400px) rotateY(-80deg) rotateX(7deg) translateZ(34px);
+    }
+    100% {
+        transform: perspective(2400px) rotateY(-180deg) rotateX(0deg) translateZ(0px);
+    }
+}
+
+@keyframes rulebookFlipPrev {
+    0% {
+        transform: perspective(2400px) rotateY(-180deg) rotateX(0deg) translateZ(0px);
+    }
+    55% {
+        transform: perspective(2400px) rotateY(-100deg) rotateX(7deg) translateZ(34px);
+    }
+    100% {
+        transform: perspective(2400px) rotateY(0deg) rotateX(0deg) translateZ(0px);
+    }
+}
+
+.rulebook-flip-next {
+    animation: rulebookFlipNext 0.95s cubic-bezier(0.3, 0.05, 0.25, 1) both;
+}
+
+.rulebook-flip-prev {
+    animation: rulebookFlipPrev 0.95s cubic-bezier(0.3, 0.05, 0.25, 1) both;
+}
+
+.rulebook-flip-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+}
+
+.rulebook-cover {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    transform: perspective(2400px) rotateY(0deg);
+    opacity: 1;
+    border-radius: 0.75rem;
+    transition:
+        transform 1.5s cubic-bezier(0.4, 0.05, 0.2, 1),
+        opacity 0.35s ease;
+    will-change: transform;
+}
+
+.rulebook-cover-open {
+    animation: rulebookCoverOpen 1.5s cubic-bezier(0.4, 0.05, 0.2, 1) both;
+    pointer-events: none;
+}
+
+.rulebook-cover-open-hold {
+    transform: perspective(2400px) rotateY(-180deg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+@keyframes rulebookCoverOpen {
+    0% {
+        transform: perspective(2400px) rotateY(0deg) rotateX(0deg) translateZ(0px);
+    }
+    45% {
+        transform: perspective(2400px) rotateY(-80deg) rotateX(7deg) translateZ(34px);
+    }
+    100% {
+        transform: perspective(2400px) rotateY(-180deg) rotateX(0deg) translateZ(0px);
+    }
+}
+
+.rulebook-cover-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+    border-radius: 0.75rem;
+}
+
+.rulebook-dropcap {
+    float: left;
+    font-family: var(--font-display);
+    font-size: 3.4em;
+    line-height: 0.72;
+    font-weight: 900;
+    padding-right: 0.12em;
+    padding-top: 0.05em;
+    color: #8a5a10;
+}
+
+@keyframes rulebookSweep {
+    0% {
+        transform: translateX(32%);
+        opacity: 0;
+    }
+    25% {
+        opacity: 0.4;
+    }
+    70% {
+        opacity: 0.4;
+    }
+    100% {
+        transform: translateX(-32%);
+        opacity: 0;
+    }
+}
+
+.rulebook-sweep {
+    background: linear-gradient(
+        100deg,
+        transparent 32%,
+        rgba(0, 0, 0, 0.55) 50%,
+        transparent 68%
+    );
+    animation: rulebookSweep 0.95s ease-in-out both;
+}
+
+/* ===== Game board ===== */
+
+.table-felt {
+    background-image:
+        radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.06) 0%, transparent 55%),
+        radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 100% 100%, 9px 9px;
+}
+
+@keyframes avatarRing {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+    }
+}
+
+.animate-avatar-ring {
+    animation: avatarRing 1.6s ease-out infinite;
+}
+
+@keyframes deckFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.animate-deck-float {
+    animation: deckFloat 2.8s ease-in-out infinite;
+}
+
+/* ===== Trick card collection toward the trick winner =====
+   Cards are positioned with left/top (percentages of the trick area) and
+   centered with translate(-50%, -50%). The keyframe only overrides left/top
+   toward the winner's seat; the start values come from the inline styles,
+   so there is no jump when the animation begins. Targets are trick-area
+   percentages, so they stay inside the 425px board on any viewport. */
+
+@keyframes cardCollect {
+    from {
+        transform: translate(-50%, -50%) scale(0.85);
+        opacity: 1;
+    }
+    to {
+        left: var(--collect-to-left, 50%);
+        top: var(--collect-to-top, 50%);
+        transform: translate(-50%, -50%) scale(0.7);
+        opacity: 0;
+    }
+}
+
+.animate-card-collect-P1 {
+    --collect-to-left: 50%;
+    --collect-to-top: 110%;
+}
+
+.animate-card-collect-P2 {
+    --collect-to-left: -9%;
+    --collect-to-top: 50%;
+}
+
+.animate-card-collect-P3 {
+    --collect-to-left: 50%;
+    --collect-to-top: -23%;
+}
+
+.animate-card-collect-P4 {
+    --collect-to-left: 109%;
+    --collect-to-top: 50%;
+}
+
+.animate-card-collect-P1,
+.animate-card-collect-P2,
+.animate-card-collect-P3,
+.animate-card-collect-P4 {
+    animation: cardCollect 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ===== Center deck glow while dealing ===== */
+
+@keyframes deckHaloPulse {
+    0%,
+    100% {
+        opacity: 0.35;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.85;
+        transform: scale(1.12);
+    }
+}
+
+.animate-deck-halo {
+    animation: deckHaloPulse 1.4s ease-in-out infinite;
 }

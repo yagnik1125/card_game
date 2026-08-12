@@ -1,10 +1,15 @@
 import { removeGame } from "@/api/gameApi";
 import { setSnapshot, setWinner, setTrickCards, setAnimating, setDealing } from "@/store/slices/gameSlice";
+import { selectSoloMatchWinner } from "@/utils/winner";
+import { HUMAN_PLAYER_ID } from "@/utils/constants";
+import { useWinnerConfetti } from "@/hooks/useWinnerConfetti";
 import {
     Trophy,
     Home,
     X,
     Crown,
+    Medal,
+    Sparkles,
 } from "lucide-react";
 import { useDispatch } from "react-redux";
 
@@ -14,286 +19,466 @@ import {
 
 interface Props {
     winner: any;
+    winnerPlayerId?: string | null;
     gameId: any;
 }
 
 export default function WinnerModal({
     winner,
+    winnerPlayerId,
     gameId,
 }: Props) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const isHumanWinner = !!winner && winnerPlayerId === HUMAN_PLAYER_ID;
+
+    useWinnerConfetti(!!winner, isHumanWinner);
 
     if (!winner) {
         return null;
     }
 
-    const closeModal = async () => {
-        await removeGame(gameId);
+    const closeModal = () => {
         dispatch(setSnapshot(null));
         dispatch(setWinner(null));
         dispatch(setTrickCards([]));
         dispatch(setAnimating(false));
         dispatch(setDealing(false));
         navigate("/");
+        removeGame(gameId).catch((error) => console.error(error));
     };
 
-    const sortedPlayers = [...winner.players].sort((a, b) => b.totalTricks - a.totalTricks);
-    const matchWinner = sortedPlayers[0];
+    const matchWinner =
+        winner.players.find((p: any) => p.id === winnerPlayerId)
+        ?? selectSoloMatchWinner(winner.players);
+
+    const podium = [...winner.players].sort(
+        (a: any, b: any) =>
+            (b.roundsWon - a.roundsWon) || (b.totalTricks - a.totalTricks)
+    );
+
+    const gold = podium[0];
+    const silver = podium[1];
+    const bronze = podium[2];
+    const others = podium.slice(3);
+
+    const playerName = (player: any) =>
+        player.id === HUMAN_PLAYER_ID ? "You" : player.name;
 
     return (
         <div className="
             fixed
             inset-0
             z-100
-            bg-black/75
+            bg-black/80
             backdrop-blur-md
             flex
             items-center
             justify-center
             p-3
         ">
+            {/* Ambient glow */}
+            <div className="
+                absolute
+                left-1/2
+                top-1/2
+                w-[640px]
+                h-[640px]
+                rounded-full
+                bg-yellow-500/10
+                blur-3xl
+                animate-glow-breath
+                pointer-events-none
+            " />
+
+            {/* Animated gradient border shell */}
             <div className="
                 relative
                 w-full
                 max-w-lg
                 max-h-[92vh]
-                overflow-hidden
                 rounded-3xl
-                border
-                border-white/10
-                bg-linear-to-b
-                from-slate-900
-                to-slate-950
-                shadow-2xl
-                flex
-                flex-col
+                p-[2px]
+                overflow-hidden
             ">
-
-                {/* Close */}
-
-                <button
-                    onClick={closeModal}
-                    className="
-                        absolute
-                        top-3
-                        right-3
-                        z-20
-                        w-9
-                        h-9
-                        rounded-full
-                        bg-white/10
-                        hover:bg-white/20
-                        flex
-                        items-center
-                        justify-center
-                        text-white
-                        cursor-pointer
-                    "
-                >
-                    <X size={18} />
-                </button>
-
-                {/* Scroll Area */}
-
                 <div className="
-                    overflow-y-auto
-                    flex-1
-                    scrollbar-hide
+                    absolute
+                    -inset-[150%]
+                    animate-spin-slow
+                    bg-[conic-gradient(from_0deg,#f59e0b_0%,#fbbf24_18%,transparent_45%,transparent_55%,#f59e0b_82%,#fbbf24_100%)]
+                " />
+                <div className="
+                    relative
+                    rounded-[22px]
+                    bg-slate-950
+                    flex
+                    flex-col
+                    max-h-[92vh]
+                    overflow-hidden
                 ">
 
-                    {/* Hero */}
-
-                    <div className="
-                        px-6
-                        pt-7
-                        pb-6
-                        text-center
-                        border-b
-                        border-white/10
-                    ">
-                        <div className="
-                            mx-auto
-                            mb-4
-                            w-22
-                            h-22
-                            rounded-full
-                            bg-yellow-400
-                            flex
-                            items-center
-                            justify-center
-                            shadow-xl
-                        ">
-                            <Trophy
-                                size={42}
-                                className="text-black"
-                            />
-                        </div>
-                        <div className="
-                            text-green-400
-                            font-bold
-                            uppercase
-                            tracking-widest
-                            text-xs
-                        ">
-                            Match Complete
-                        </div>
-                        <h1 className="
-                            text-3xl
-                            font-black
-                            text-white
-                            mt-2
-                        ">
-                            {matchWinner.id === "P1"
-                                ? "You Won!"
-                                : `${matchWinner.name} Wins`
-                            }
-                        </h1>
-                        <div className="
-                            mt-3
-                            text-slate-400
-                            text-sm
-                        ">
-                            Total Tricks Won
-                        </div>
-                        <div className="
-                            text-4xl
-                            font-black
-                            text-white
-                        ">
-                            {matchWinner.totalTricks}
-                        </div>
-                    </div>
-
-                    {/* Leaderboard */}
-
-                    <div className="
-                        p-5
-                        space-y-3
-                    ">
-                        {sortedPlayers.map((player, index) => (
-                            <div
-                                key={player.id}
-                                className={`
-                                    rounded-2xl
-                                    px-4
-                                    py-3
-                                    border
-                                    flex
-                                    items-center
-                                    justify-between
-                                    ${player.id === matchWinner.id
-                                        ? `border-yellow-400/30 bg-yellow-500/10`
-                                        : `border-white/10 bg-white/5`
-                                    }
-                            `}
-                            >
-                                <div className="
-                                        flex
-                                        items-center
-                                        gap-3
-                                    ">
-                                    <div className="
-                                            w-6
-                                            text-slate-500
-                                            font-bold
-                                        ">
-                                        #
-                                        {index + 1}
-                                    </div>
-                                    <div className="
-                                            w-11
-                                            h-11
-                                            rounded-full
-                                            bg-green-600
-                                            flex
-                                            items-center
-                                            justify-center
-                                            text-white
-                                            font-bold
-                                        ">
-                                        {player.id === "P1"
-                                            ? "Y"
-                                            : player.name[0]
-                                        }
-                                    </div>
-                                    <div>
-                                        <div className="
-                                                text-white
-                                                font-bold
-                                                flex
-                                                items-center
-                                                gap-2
-                                            ">
-                                            {player.id === "P1"
-                                                ? "You"
-                                                : player.name
-                                            }
-                                            {player.id === matchWinner.id &&
-                                                <Crown
-                                                    size={16}
-                                                    className="
-                                                            text-yellow-400
-                                                        "
-                                                />
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="
-                                        text-right
-                                    ">
-                                    <div className="
-                                            text-xl
-                                            font-black
-                                            text-white
-                                        ">
-                                        {player.totalTricks}
-                                    </div>
-                                    <div className="
-                                            text-xs
-                                            text-slate-400
-                                        ">
-                                        tricks
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                        )}
-                    </div>
-                </div>
-
-                {/* Footer */}
-
-                <div className="
-                    border-t
-                    border-white/10
-                    p-4
-                ">
+                    {/* Close */}
                     <button
                         onClick={closeModal}
                         className="
-                            w-full
-                            h-13
-                            rounded-2xl
-                            bg-green-500
-                            text-black
-                            font-black
+                            absolute
+                            top-3
+                            right-3
+                            z-20
+                            w-9
+                            h-9
+                            rounded-full
+                            bg-white/10
+                            hover:bg-white/20
                             flex
                             items-center
                             justify-center
-                            gap-3
+                            text-white
                             cursor-pointer
-                            hover:scale-[1.01]
-                            active:scale-[.98]
-                            transition-all
                         "
                     >
-                        <Home size={20} />
-                        Back To Home
+                        <X size={18} />
                     </button>
+
+                    {/* Scroll Area */}
+                    <div className="
+                        overflow-y-auto
+                        flex-1
+                        scrollbar-hide
+                    ">
+
+                        {/* Hero */}
+                        <div className="
+                            px-6
+                            pt-8
+                            pb-6
+                            text-center
+                        ">
+                            <div className="
+                                relative
+                                mx-auto
+                                mb-5
+                                w-24
+                                h-24
+                                rounded-full
+                                bg-gradient-to-b
+                                from-yellow-300
+                                to-amber-500
+                                animate-trophy-pulse
+                                overflow-hidden
+                                flex
+                                items-center
+                                justify-center
+                                shadow-[0_8px_30px_rgba(251,191,36,0.35)]
+                            ">
+                                <div className="absolute inset-0 overflow-hidden rounded-full">
+                                    <div className="
+                                        absolute
+                                        top-0
+                                        bottom-0
+                                        w-1/3
+                                        bg-white/40
+                                        blur-sm
+                                        animate-shine-sweep
+                                    " />
+                                </div>
+                                <Trophy
+                                    size={44}
+                                    className="text-black"
+                                />
+                            </div>
+
+                            <div className="
+                                text-amber-400
+                                font-bold
+                                uppercase
+                                tracking-[0.3em]
+                                text-xs
+                            ">
+                                Match Complete
+                            </div>
+
+                            <h1 className="
+                                mt-2
+                                text-4xl
+                                font-black
+                                bg-gradient-to-r
+                                from-yellow-200
+                                via-amber-400
+                                to-yellow-500
+                                bg-clip-text
+                                text-transparent
+                                animate-winner-pop
+                            ">
+                                {matchWinner.id === HUMAN_PLAYER_ID
+                                    ? "You Won!"
+                                    : `${matchWinner.name} Wins`
+                                }
+                            </h1>
+
+                            <div className="
+                                mt-2
+                                inline-flex
+                                items-center
+                                gap-2
+                                text-white/70
+                                text-sm
+                            ">
+                                <Sparkles size={14} className="text-amber-400" />
+                                Match Champion
+                                <Crown size={14} className="text-amber-400" />
+                            </div>
+                        </div>
+
+                        {/* Champion stats */}
+                        <div className="
+                            grid
+                            grid-cols-3
+                            gap-2
+                            px-4
+                            pb-5
+                        ">
+                            <div className="
+                                rounded-2xl
+                                bg-white/5
+                                border
+                                border-white/10
+                                px-3
+                                py-3
+                                text-center
+                            ">
+                                <div className="text-2xl font-black text-amber-400">
+                                    {matchWinner.totalTricks}
+                                </div>
+                                <div className="text-[10px] uppercase tracking-widest text-white/50 mt-1">
+                                    Tricks Won
+                                </div>
+                            </div>
+                            <div className="
+                                rounded-2xl
+                                bg-white/5
+                                border
+                                border-white/10
+                                px-3
+                                py-3
+                                text-center
+                            ">
+                                <div className="text-2xl font-black text-amber-400">
+                                    {matchWinner.roundsWon ?? 0}
+                                </div>
+                                <div className="text-[10px] uppercase tracking-widest text-white/50 mt-1">
+                                    Rounds Won
+                                </div>
+                            </div>
+                            <div className="
+                                rounded-2xl
+                                bg-white/5
+                                border
+                                border-white/10
+                                px-3
+                                py-3
+                                text-center
+                            ">
+                                <div className="text-2xl font-black text-amber-400">
+                                    #1
+                                </div>
+                                <div className="text-[10px] uppercase tracking-widest text-white/50 mt-1">
+                                    Rank
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Podium */}
+                        <div className="
+                            grid
+                            grid-cols-3
+                            gap-2
+                            items-end
+                            px-4
+                            pb-2
+                        ">
+                            {silver && (
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="text-xs font-bold text-white/80 truncate max-w-full">
+                                        {playerName(silver)}
+                                    </div>
+                                    <div className="
+                                        w-14
+                                        h-14
+                                        rounded-full
+                                        bg-slate-600/80
+                                        flex
+                                        items-center
+                                        justify-center
+                                        animate-medal-bounce
+                                        shadow-lg
+                                    ">
+                                        <Medal size={24} className="text-slate-300" />
+                                    </div>
+                                    <div className="
+                                        w-full
+                                        h-10
+                                        rounded-t-xl
+                                        bg-slate-700/70
+                                        flex
+                                        items-start
+                                        justify-center
+                                        pt-1.5
+                                        text-xs
+                                        font-black
+                                        text-white/70
+                                    ">
+                                        2nd
+                                    </div>
+                                </div>
+                            )}
+
+                            {gold && (
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="text-xs font-black text-amber-300 truncate max-w-full">
+                                        {playerName(gold)}
+                                    </div>
+                                    <div className="
+                                        w-16
+                                        h-16
+                                        rounded-full
+                                        bg-gradient-to-b
+                                        from-yellow-300
+                                        to-amber-500
+                                        flex
+                                        items-center
+                                        justify-center
+                                        animate-medal-bounce
+                                        shadow-[0_6px_24px_rgba(251,191,36,0.4)]
+                                    ">
+                                        <Crown size={28} className="text-black" />
+                                    </div>
+                                    <div className="
+                                        w-full
+                                        h-12
+                                        rounded-t-xl
+                                        bg-gradient-to-b
+                                        from-yellow-500
+                                        to-amber-600
+                                        flex
+                                        items-start
+                                        justify-center
+                                        pt-1.5
+                                        text-xs
+                                        font-black
+                                        text-black
+                                    ">
+                                        1st
+                                    </div>
+                                </div>
+                            )}
+
+                            {bronze && (
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="text-xs font-bold text-white/80 truncate max-w-full">
+                                        {playerName(bronze)}
+                                    </div>
+                                    <div className="
+                                        w-14
+                                        h-14
+                                        rounded-full
+                                        bg-amber-800/80
+                                        flex
+                                        items-center
+                                        justify-center
+                                        animate-medal-bounce
+                                        shadow-lg
+                                    ">
+                                        <Medal size={24} className="text-amber-300" />
+                                    </div>
+                                    <div className="
+                                        w-full
+                                        h-9
+                                        rounded-t-xl
+                                        bg-amber-900/70
+                                        flex
+                                        items-start
+                                        justify-center
+                                        pt-1.5
+                                        text-xs
+                                        font-black
+                                        text-white/70
+                                    ">
+                                        3rd
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Remaining players */}
+                        {others.length > 0 && (
+                            <div className="px-4 pt-3 pb-4 space-y-1">
+                                {others.map((player: any, index: number) => (
+                                    <div
+                                        key={player.id}
+                                        className="
+                                            flex
+                                            items-center
+                                            justify-between
+                                            rounded-xl
+                                            bg-white/5
+                                            border
+                                            border-white/10
+                                            px-3
+                                            py-2
+                                        "
+                                    >
+                                        <div className="flex items-center gap-2 text-white/80 text-sm font-bold">
+                                            <span className="text-white/40 text-xs">
+                                                #{index + 4}
+                                            </span>
+                                            {playerName(player)}
+                                        </div>
+                                        <div className="text-sm font-black text-white">
+                                            {player.totalTricks}
+                                            <span className="text-white/40 text-xs font-normal ml-1">
+                                                tricks
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="
+                        border-t
+                        border-white/10
+                        p-4
+                    ">
+                        <button
+                            onClick={closeModal}
+                            className="
+                                w-full
+                                h-13
+                                rounded-2xl
+                                bg-gradient-to-r
+                                from-green-500
+                                to-emerald-500
+                                text-black
+                                font-black
+                                flex
+                                items-center
+                                justify-center
+                                gap-3
+                                cursor-pointer
+                                hover:scale-[1.01]
+                                active:scale-[.98]
+                                transition-all
+                            "
+                        >
+                            <Home size={20} />
+                            Back to Home
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    );
+    )
 }

@@ -1,5 +1,6 @@
 export * from "./BotService.js";
 export * from "./BotTurnService.js";
+export * from "./EventBuilder.js";
 export * from "./EventService.js";
 export * from "./GameBootstrapService.js";
 export * from "./GameFlowService.js";
