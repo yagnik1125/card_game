@@ -59,4 +59,11 @@ export class GameGateway {
         }
         return (adapter.rooms?.get(gameId)?.size ?? 0) > 0;
     }
+
+    static roomMemberCount(gameId: string): number {
+        if (!this.io) {
+            return 0;
+        }
+        return this.io.sockets?.adapter?.rooms?.get(gameId)?.size ?? 0;
+    }
 }

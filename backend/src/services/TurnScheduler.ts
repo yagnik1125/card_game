@@ -12,7 +12,9 @@ import {
 
 import { BotScheduler } from "./BotScheduler.js";
 import { GameService } from "./GameService.js";
+import { InFlightGuard } from "./InFlightGuard.js";
 import { GameEvent } from "../types/GameEvent.js";
+import { wsLog, wsGameLog } from "../websocket/wsLogger.js";
 
 export interface PlayerPlayResult {
     events: GameEvent[];
@@ -66,6 +68,8 @@ export class TurnScheduler {
         PlayCardService.playCard(gameId, playerId, card);
         const afterHuman: GameSession = GameSessionManager.get(gameId);
 
+        wsGameLog(gameId, `human played player=${playerId} card=${card.id} (${card.rank} ${card.suit}) trick=${afterHuman.gameState?.currentTrick.trickNumber} turn=${afterHuman.gameState?.turnState.turnNumber} currentPlayerId=${afterHuman.gameState?.turnState.currentPlayerId}`);
+
         const events: GameEvent[] = EventBuilder.buildMoveEvents(
             afterHuman,
             playerId,
@@ -80,9 +84,34 @@ export class TurnScheduler {
                 teamStatsBefore
             }
         );
+        wsGameLog(gameId, `events built count=${events.length} types=${events.map(e => e.type).join(",")}`);
         const snapshot: unknown = GameService.getView(gameId);
 
-        BotScheduler.executeNextBot(gameId);
+        const nextTurn = {
+            currentPlayerId: afterHuman.gameState!.turnState.currentPlayerId,
+            turnNumber: afterHuman.gameState!.turnState.turnNumber
+        };
+        const nextPlayer = afterHuman.match.players.find(p => p.id === nextTurn.currentPlayerId);
+        if (nextPlayer && nextPlayer.isBot && !afterHuman.gameState!.completed) {
+            const trumpAfter = afterHuman.gameState?.currentRound.state.trumpSuit ?? null;
+            const roundNumberAfter = afterHuman.gameState?.currentRound.state.roundNumber ?? roundBefore.state.roundNumber;
+            const trumpDeclared = !trumpSuitBefore && trumpAfter !== null;
+            const roundCompleted = roundNumberAfter > roundBefore.state.roundNumber || afterHuman.gameState?.completed === true;
+            const trickCompleted = afterHuman.gameState?.currentTrick.plays.length === 0;
+
+            let delay = BotScheduler.delayMs();
+            if (roundCompleted) {
+                delay = BotScheduler.roundDelayMs();
+            } else if (trumpDeclared) {
+                delay = BotScheduler.trumpDelayMs();
+            } else if (trickCompleted) {
+                delay = BotScheduler.trickDelayMs();
+            }
+            wsGameLog(gameId, `scheduling next bot=${nextPlayer.id} for game=${gameId} in ${delay}ms`);
+            setTimeout(() => BotScheduler.executeNextBot(gameId, nextTurn), delay);
+        } else {
+            InFlightGuard.release(gameId);
+        }
 
         return { events, snapshot };
     }

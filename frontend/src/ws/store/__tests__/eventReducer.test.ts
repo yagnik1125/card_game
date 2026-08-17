@@ -164,6 +164,19 @@ describe("eventReducer", () => {
         expect(state.trumpDeclaration).toBeNull();
     });
 
+    it("TRUMP_DECLARED patches snapshot.trumpSuit when a snapshot is present", () => {
+        let state: WsGameState = {
+            ...wsGameInitialState,
+            snapshot: makeSnapshot({ trumpSuit: null }),
+        };
+        state = apply(
+            state,
+            envelope("TRUMP_DECLARED", { playerId: "P1", suit: "HEARTS" })
+        );
+        expect(state.trumpDeclaration).toBe("HEARTS");
+        expect(state.snapshot!.trumpSuit).toBe("HEARTS");
+    });
+
     it("TRICK_COMPLETED clears the trick, records the winner and applies the snapshot", () => {
         let state: WsGameState = {
             ...wsGameInitialState,
@@ -618,5 +631,185 @@ describe("eventReducer", () => {
             code: "ILLEGAL_MOVE",
             message: "Not a legal move",
         });
+    });
+
+    it("TURN_CHANGED stores the fresh legal moves for the hand", () => {
+        let state: WsGameState = {
+            ...wsGameInitialState,
+            snapshot: makeSnapshot(),
+            legalMoves: ["c1", "c2"],
+        };
+        state = apply(
+            state,
+            envelope("TURN_CHANGED", {
+                currentPlayerId: "P1",
+                turnNumber: 2,
+                legalMoves: ["c2"],
+            })
+        );
+        expect(state.legalMoves).toEqual(["c2"]);
+    });
+
+    it("TURN_CHANGED without legal moves keeps the current legal moves", () => {
+        let state: WsGameState = {
+            ...wsGameInitialState,
+            snapshot: makeSnapshot(),
+            legalMoves: ["c1"],
+        };
+        state = apply(
+            state,
+            envelope("TURN_CHANGED", {
+                currentPlayerId: "P2",
+                turnNumber: 1,
+            })
+        );
+        expect(state.legalMoves).toEqual(["c1"]);
+    });
+
+    it("ROUND_STARTED applies the fresh snapshot (new hand) and keeps dealing", () => {
+        let state: WsGameState = {
+            ...wsGameInitialState,
+            snapshot: makeSnapshot(),
+            trickCards: [{ playerId: "P2", suit: "CLUBS", rank: 3 }],
+            trickWinner: { id: "P3", name: "Bot 2", tricksWonThisRound: 2 },
+            legalMoves: ["c1"],
+        };
+        const nextRound = makeSnapshot({
+            roundNumber: 2,
+            currentPlayerId: "P2",
+            currentTrick: {
+                id: "t2",
+                trickNumber: 1,
+                leadSuit: null,
+                plays: [],
+                winnerPlayerId: null,
+            },
+            players: [
+                {
+                    id: "P1",
+                    name: "You",
+                    cardsRemaining: 3,
+                    tricksWonRound: 0,
+                    totalTricks: 4,
+                    roundsWon: 1,
+                    hand: [card("n1", "HEARTS", 2), card("n2", "SPADES", 13), card("n3", "CLUBS", 9)],
+                },
+                {
+                    id: "P2",
+                    name: "Bot 1",
+                    cardsRemaining: 3,
+                    tricksWonRound: 0,
+                    totalTricks: 5,
+                    roundsWon: 0,
+                },
+                {
+                    id: "P3",
+                    name: "Bot 2",
+                    cardsRemaining: 3,
+                    tricksWonRound: 0,
+                    totalTricks: 2,
+                    roundsWon: 0,
+                },
+                {
+                    id: "P4",
+                    name: "Bot 3",
+                    cardsRemaining: 3,
+                    tricksWonRound: 0,
+                    totalTricks: 2,
+                    roundsWon: 0,
+                },
+            ],
+        });
+        state = apply(
+            state,
+            envelope(
+                "ROUND_STARTED",
+                {
+                    gameId: "g1",
+                    roundNumber: 2,
+                    championPlayerId: "P2",
+                    championTeamId: null,
+                },
+                nextRound
+            )
+        );
+        expect(state.dealing).toBe(true);
+        expect(state.snapshot).toBe(nextRound);
+        expect(state.snapshot!.players[0].hand!.map((c) => c.id)).toEqual([
+            "n1",
+            "n2",
+            "n3",
+        ]);
+        expect(state.trickCards).toEqual([]);
+        expect(state.trickWinner).toBeNull();
+        expect(state.legalMoves).toEqual(nextRound.legalMoves);
+    });
+
+    it("ROUND_STARTED without a snapshot still updates the round fields", () => {
+        let state: WsGameState = {
+            ...wsGameInitialState,
+            snapshot: makeSnapshot(),
+        };
+        state = apply(
+            state,
+            envelope("ROUND_STARTED", {
+                gameId: "g1",
+                roundNumber: 2,
+                championPlayerId: "P4",
+                championTeamId: null,
+            })
+        );
+        expect(state.snapshot!.roundNumber).toBe(2);
+        expect(state.snapshot!.champion).toBe("P4");
+    });
+
+    it("the first GAME_STATE triggers dealing (fresh game/round deal)", () => {
+        const state: WsGameState = apply(
+            { ...wsGameInitialState },
+            envelope("GAME_STATE", { gameId: "g1" }, makeSnapshot())
+        );
+        expect(state.dealing).toBe(true);
+    });
+
+    it("a later GAME_STATE resync does not re-deal", () => {
+        let state: WsGameState = apply(
+            { ...wsGameInitialState },
+            envelope("GAME_STATE", { gameId: "g1" }, makeSnapshot())
+        );
+        expect(state.dealing).toBe(true);
+        state = apply(
+            state,
+            envelope(
+                "GAME_STATE",
+                { gameId: "g1" },
+                makeSnapshot({ currentPlayerId: "P3" })
+            )
+        );
+        expect(state.dealing).toBe(false);
+    });
+
+    it("TRICK_COMPLETED keeps legal moves in sync with the fresh snapshot", () => {
+        let state: WsGameState = {
+            ...wsGameInitialState,
+            snapshot: makeSnapshot(),
+            legalMoves: ["c1"],
+        };
+        const afterTrick = makeSnapshot({
+            currentPlayerId: "P1",
+            legalMoves: ["c2"],
+        });
+        state = apply(
+            state,
+            envelope(
+                "TRICK_COMPLETED",
+                {
+                    trickNumber: 1,
+                    winnerPlayerId: "P1",
+                    trickWinner: { id: "P1", name: "You", tricksWonThisRound: 1 },
+                },
+                afterTrick
+            )
+        );
+        expect(state.legalMoves).toEqual(["c2"]);
     });
 });

@@ -6,6 +6,7 @@ import { InFlightGuard } from "../../services/InFlightGuard.js";
 import { TurnScheduler } from "../../services/TurnScheduler.js";
 import { ConnectionStore } from "../ConnectionStore.js";
 import { GameEventEmitter } from "../GameEventEmitter.js";
+import { wsLog, wsError } from "../wsLogger.js";
 import {
     isGameCreatePayload,
     isGameIdPayload,
@@ -138,6 +139,9 @@ export function handleCreateGame(
             payload.mode
         );
         moveSocketToGame(ctx, session.gameId, "P1");
+        wsLog(
+            `GAME:CREATE socket=${ctx.socket.id} game=${session.gameId} mode=${payload.mode} rounds=${payload.numberOfRounds} difficulty=${payload.difficulty}`
+        );
         GameEventEmitter.gameCreated(session.gameId);
         ack?.(okAck({
             gameId: session.gameId,
@@ -145,6 +149,7 @@ export function handleCreateGame(
         }));
     } catch (error) {
         const err = mapError(undefined, error);
+        wsError(`GAME:CREATE failed socket=${ctx.socket.id}`, err);
         ack?.(errorAck(err.code, err.message));
     }
 }
@@ -212,6 +217,13 @@ export function handlePlayCard(
 
     try {
         const result = TurnScheduler.playerPlay(gameId, playerId, cardId);
+        wsLog(
+            `GAME:PLAY_CARD socket=${ctx.socket.id} game=${gameId} player=${playerId} card=${cardId} events=${result.events.length}`
+        );
+        const view = result.snapshot as any;
+        wsLog(
+            `GAME:PLAY_CARD result game=${gameId} currentPlayerId=${view?.currentPlayerId} round=${view?.roundNumber} trick=${view?.currentTrick?.trickNumber} completed=${view?.completed}`
+        );
         ack?.(okAck({
             events: result.events,
             snapshot: result.snapshot,
@@ -219,6 +231,10 @@ export function handlePlayCard(
     } catch (error) {
         InFlightGuard.release(gameId);
         const err = mapError(gameId, error);
+        wsError(
+            `GAME:PLAY_CARD failed socket=${ctx.socket.id} game=${gameId} player=${playerId} card=${cardId}`,
+            err
+        );
         pushGameError(ctx, err);
         ack?.(errorAck(err.code, err.message, gameId));
     }

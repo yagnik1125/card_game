@@ -3,6 +3,7 @@ import { GameSession } from "../../game-engine/src/session/GameSession.js";
 import { GameSessionManager } from "../../game-engine/src/session/GameSessionManager.js";
 import { ConnectionStore } from "./ConnectionStore.js";
 import { GameEventEmitter } from "./GameEventEmitter.js";
+import { wsLog } from "./wsLogger.js";
 import { CLIENT_COMMAND_NAMES } from "./protocol/clientEvents.js";
 import { isGameIdPayload, isGameJoinPayload } from "./protocol/guards.js";
 import { errorAck, okAck, WsAck } from "./protocol/responses.js";
@@ -23,7 +24,7 @@ function notifyGameLeft(io: Server, gameId: string, playerId: string | undefined
 
 export function registerSocketHandlers(io: Server): void {
     io.on("connection", (socket: Socket) => {
-        console.log("Socket Connected", socket.id);
+        wsLog(`socket connected id=${socket.id}`);
 
         socket.on("GAME:PING", (...args: unknown[]) => {
             const ack = resolveAck(args[args.length - 1]);
@@ -89,6 +90,9 @@ export function registerSocketHandlers(io: Server): void {
                 gameId: payload.gameId,
                 playerId: payload.playerId,
             });
+            wsLog(
+                `GAME:JOIN socket=${socket.id} game=${payload.gameId} player=${payload.playerId}`
+            );
             io.to(payload.gameId).emit("GAME_JOINED", {
                 gameId: payload.gameId,
                 playerId: payload.playerId,
@@ -112,6 +116,9 @@ export function registerSocketHandlers(io: Server): void {
                 ConnectionStore.remove(socket.id);
                 notifyGameLeft(io, payload.gameId, existing.playerId, socket.id);
             }
+            wsLog(
+                `GAME:LEAVE socket=${socket.id} game=${payload.gameId} player=${existing?.playerId ?? "?"}`
+            );
             ack?.(okAck(null));
         });
 
@@ -119,8 +126,12 @@ export function registerSocketHandlers(io: Server): void {
             const existing = ConnectionStore.remove(socket.id);
             if (existing) {
                 notifyGameLeft(io, existing.gameId, existing.playerId, socket.id);
+                wsLog(
+                    `socket disconnected id=${socket.id} game=${existing.gameId} player=${existing.playerId}`
+                );
+            } else {
+                wsLog(`socket disconnected id=${socket.id} (no game bound)`);
             }
-            console.log("Socket Disconnected", socket.id);
         });
     });
 }

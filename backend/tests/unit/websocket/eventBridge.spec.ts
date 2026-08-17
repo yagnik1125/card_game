@@ -73,6 +73,7 @@ describe("GameEventBridge", () => {
         expect(spy).toHaveBeenCalledWith("g1", {
             currentPlayerId: "P2",
             turnNumber: 2,
+            legalMoves: expect.any(Array),
         });
     });
 
@@ -205,12 +206,13 @@ describe("GameEventBridge", () => {
             },
         });
 
+        expect(spy).toHaveBeenCalledTimes(1);
         expect(spy).toHaveBeenCalledWith("g1", {
             gameId: "g1",
             roundNumber: 2,
             championPlayerId: "P1",
             championTeamId: null,
-        });
+        }, undefined);
     });
 
     it("ignores unknown event types safely", () => {

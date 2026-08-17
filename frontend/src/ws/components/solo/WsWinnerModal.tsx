@@ -1,6 +1,5 @@
 import { emitWithAck } from "@/ws/client/socketClient";
 import { resetWsGame } from "@/store/slices/wsGameSlice";
-import { selectSoloMatchWinner } from "@/utils/winner";
 import { HUMAN_PLAYER_ID } from "@/utils/constants";
 import { useWinnerConfetti } from "@/hooks/useWinnerConfetti";
 import type { GameView, ViewPlayer } from "@/ws/dto/gameView";
@@ -61,8 +60,7 @@ export default function WsWinnerModal({
     }
 
     const matchWinner =
-        winner.players.find((p) => p.id === winnerPlayerId)
-        ?? selectSoloMatchWinner(winner.players);
+        winner.players.find((p) => p.id === winnerPlayerId);
 
     if (!matchWinner) {
         return null;
