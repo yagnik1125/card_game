@@ -96,7 +96,7 @@ export class TurnScheduler {
             const trumpAfter = afterHuman.gameState?.currentRound.state.trumpSuit ?? null;
             const roundNumberAfter = afterHuman.gameState?.currentRound.state.roundNumber ?? roundBefore.state.roundNumber;
             const trumpDeclared = !trumpSuitBefore && trumpAfter !== null;
-            const roundCompleted = roundNumberAfter > roundBefore.state.roundNumber || afterHuman.gameState?.completed === true;
+            const roundCompleted = roundNumberAfter > roundBefore.state.roundNumber || afterHuman.gameState?.completed;
             const trickCompleted = afterHuman.gameState?.currentTrick.plays.length === 0;
 
             let delay = BotScheduler.delayMs();
