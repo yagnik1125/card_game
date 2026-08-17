@@ -27,7 +27,16 @@ import {
     clearError,
     resetWsGame,
     setConnection,
+    setAnimating,
+    setDealing,
+    setRoundWinner,
+    setRoundWinnerTeam,
+    setTrickWinner,
+    setTrickWinnerTeam,
+    setTrumpDeclaration,
+    setTrickCollect,
 } from "@/store/slices/wsGameSlice";
+import { DEFAULT_WS_ANIM_CONFIG, type WsAnimConfig } from "../config";
 import { HUMAN_PLAYER_ID } from "@/utils/constants";
 import {
     emitWithAck,
@@ -38,6 +47,7 @@ import { isServerEnvelope } from "../protocol/guards";
 import type {
     GameErrorPayload,
     ServerEnvelope,
+    TrickCompletedPayload,
 } from "../protocol/serverEvents";
 import { SERVER_EVENT_NAMES } from "../protocol/serverEvents";
 import { selectError, selectSnapshot } from "../store/selectors";
@@ -118,9 +128,104 @@ export function normalizeGameError(raw: unknown): WsGameErrorInfo | null {
 
 export function createEnvelopeRouter(
     dispatch: AppDispatch,
-    handlers: EnvelopeRouterHandlers
+    handlers: EnvelopeRouterHandlers,
+    config: WsAnimConfig = DEFAULT_WS_ANIM_CONFIG
 ): EnvelopeRouter {
+    const queue: ServerEnvelope[] = [];
+    let isProcessing = false;
+    let cancelled = false;
+    const importMetaEnv: Record<string, string | undefined> =
+        (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+    const processEnv: Record<string, string | undefined> =
+        typeof globalThis !== "undefined"
+            ? (globalThis as { process?: { env?: Record<string, string | undefined> } })
+                  .process?.env ?? {}
+            : {};
+    const skipQueueWaits = Boolean(
+        processEnv.VITEST ||
+        processEnv.NODE_ENV === "test" ||
+        importMetaEnv.MODE === "test"
+    );
+    const shouldWait = (ms: number) => ms > 0 && !skipQueueWaits;
+
+    const wait = (ms: number) =>
+        new Promise((resolve) => {
+            if (ms <= 0 || cancelled) {
+                resolve(null);
+                return;
+            }
+            const timer = setTimeout(resolve, ms);
+            if (cancelled) {
+                clearTimeout(timer);
+                resolve(null);
+            }
+        });
+
+    const processQueue = async () => {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        while (queue.length > 0 && !cancelled) {
+            const envelope = queue.shift()!;
+
+            switch (envelope.type) {
+                case "TRUMP_DECLARED": {
+                    dispatch(applyServerEvent(envelope));
+                    if (shouldWait(config.trumpModalMs)) await wait(config.trumpModalMs);
+                    break;
+                }
+
+                case "CARD_PLAYED":
+                case "BOT_PLAY": {
+                    dispatch(applyServerEvent(envelope));
+                    if (shouldWait(config.cardPlayMs)) await wait(config.cardPlayMs);
+                    break;
+                }
+
+                case "TRICK_COMPLETED": {
+                    // REST pattern: collect animation first, then clear cards & show modal
+                    const winnerId = (envelope.payload as TrickCompletedPayload).winnerPlayerId ?? (envelope.payload as TrickCompletedPayload).trickWinner?.id;
+                    if (winnerId) {
+                        dispatch(setTrickCollect(winnerId));
+                        if (shouldWait(config.cardPlayMs)) await wait(config.cardPlayMs);
+                    }
+                    dispatch(applyServerEvent(envelope));
+                    dispatch(setTrickCollect(null));
+                    if (shouldWait(config.trickModalMs)) await wait(config.trickModalMs);
+                    break;
+                }
+
+                case "ROUND_COMPLETED": {
+                    dispatch(applyServerEvent(envelope));
+                    if (shouldWait(config.roundModalMs)) await wait(config.roundModalMs);
+                    break;
+                }
+
+                case "ROUND_STARTED": {
+                    dispatch(applyServerEvent(envelope));
+                    if (shouldWait(config.dealingMs)) await wait(config.dealingMs);
+                    break;
+                }
+
+                case "MATCH_COMPLETED": {
+                    dispatch(applyServerEvent(envelope));
+                    break;
+                }
+
+                default: {
+                    dispatch(applyServerEvent(envelope));
+                    break;
+                }
+            }
+        }
+
+        isProcessing = false;
+    };
+
     const applyGameError = (error: WsGameErrorInfo): void => {
+        cancelled = true;
+        queue.length = 0;
+        isProcessing = false;
         const envelope: ServerEnvelope = {
             type: "GAME_ERROR",
             payload: error as GameErrorPayload,
@@ -137,6 +242,9 @@ export function createEnvelopeRouter(
     return {
         handleEnvelope: (envelope) => {
             if (envelope.type === "GAME_REMOVED") {
+                cancelled = true;
+                queue.length = 0;
+                isProcessing = false;
                 dispatch(resetWsGame());
                 handlers.onGameRemoved();
                 return;
@@ -149,7 +257,15 @@ export function createEnvelopeRouter(
                 applyGameError(error);
                 return;
             }
-            dispatch(applyServerEvent(envelope));
+            if (envelope.type === "GAME_STATE") {
+                queue.length = 0;
+                isProcessing = false;
+                dispatch(applyServerEvent(envelope));
+                return;
+            }
+
+            queue.push(envelope);
+            processQueue();
         },
         handleRawError: (raw) => {
             const error = normalizeGameError(raw);

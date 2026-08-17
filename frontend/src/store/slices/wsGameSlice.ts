@@ -59,6 +59,9 @@ const slice = createSlice({
         clearError(state) {
             state.error = null;
         },
+        setTrickCollect(state, action: PayloadAction<string | null>) {
+            state.trickCollect = action.payload;
+        },
     },
 });
 
@@ -75,6 +78,7 @@ export const {
     setRoundWinner,
     setRoundWinnerTeam,
     clearError,
+    setTrickCollect,
 } = slice.actions;
 
 export type { WsGameState } from "@/ws/store/eventReducer";

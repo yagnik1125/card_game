@@ -12,8 +12,11 @@ import WsPlayerHand from "../common/WsPlayerHand";
 import {
     selectAnimating,
     selectDealing,
+    selectIsHumanTurn,
+    selectPlayableCardIds,
     selectSnapshot,
     selectTrickCards,
+    selectTrickCollect,
 } from "@/ws/store/selectors";
 
 interface Props {
@@ -32,6 +35,9 @@ export default function WsGameBoardTeam({
     const trickCards = useSelector(selectTrickCards);
     const animating = useSelector(selectAnimating);
     const dealing = useSelector(selectDealing);
+    const isHumanTurn = useSelector(selectIsHumanTurn);
+    const playableCardIds = useSelector(selectPlayableCardIds);
+    const trickCollect = useSelector(selectTrickCollect);
     if (!snapshot) {
         return null;
     }
@@ -497,10 +503,12 @@ export default function WsGameBoardTeam({
                                 break;
                         }
 
+                        const collecting = trickCollect !== null;
+
                         return (
                             <div
                                 key={`${play.playerId}-${play.rank}-${play.suit}`}
-                                className={`absolute ${animationClass}`}
+                                className={`absolute ${collecting ? `animate-card-collect-${trickCollect}` : animationClass}`}
                                 style={{
                                     ...style,
                                     transform: "translate(-50%, -50%)",
@@ -523,10 +531,10 @@ export default function WsGameBoardTeam({
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-fit">
                     <WsPlayerHand
                         cards={player.hand || []}
-                        legalMoves={snapshot.legalMoves}
+                        legalMoves={playableCardIds}
                         trumpSuit={snapshot.trumpSuit ?? ""}
                         onPlay={onPlay}
-                        disabled={animating || handDisabled}
+                        disabled={!isHumanTurn || animating || handDisabled}
                     />
                 </div>
 

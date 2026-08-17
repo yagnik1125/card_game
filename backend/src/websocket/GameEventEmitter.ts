@@ -1,5 +1,6 @@
 import { GameService } from "../services/GameService.js";
 import { GameGateway } from "./GameGateway.js";
+import { wsLog } from "./wsLogger.js";
 import { ServerEnvelope, ServerEventName } from "./protocol/serverEvents.js";
 import type {
     BotPlayedPayload,
@@ -32,7 +33,7 @@ export enum SocketEvents {
 }
 
 export class GameEventEmitter {
-    private static emit(
+    private     static emit(
         gameId: string,
         type: ServerEventName,
         payload: unknown,
@@ -44,6 +45,10 @@ export class GameEventEmitter {
             snapshot,
             timestamp: Date.now(),
         };
+        const members = GameGateway.roomMemberCount(gameId);
+        wsLog(
+            `emit game=${gameId} event=${type} roomMembers=${members}${snapshot !== undefined ? " snapshot=yes" : ""} payload=${JSON.stringify(payload).slice(0, 120)}`
+        );
         GameGateway.emitToGame(gameId, type, envelope);
     }
 
@@ -70,8 +75,12 @@ export class GameEventEmitter {
         );
     }
 
-    static roundStarted(gameId: string, payload: RoundStartedPayload): void {
-        this.emit(gameId, SocketEvents.ROUND_STARTED, payload);
+    static roundStarted(
+        gameId: string,
+        payload: RoundStartedPayload,
+        snapshot?: unknown
+    ): void {
+        this.emit(gameId, SocketEvents.ROUND_STARTED, payload, snapshot);
     }
 
     static cardPlayed(

@@ -230,18 +230,18 @@ describe("WsTeam2V2GamePage", () => {
                         winnerPlayerId: "P3",
                         roundWinnerTeam: {
                             id: "TEAM_A",
-                            name: "A",
+                            name: "Team A",
                             teams: [
                                 {
                                     id: "TEAM_A",
-                                    name: "A",
+                                    name: "Team A",
                                     tricksWonThisRound: 4,
                                     totalTricksWon: 9,
                                     roundsWon: 1,
                                 },
                                 {
                                     id: "TEAM_B",
-                                    name: "B",
+                                    name: "Team B",
                                     tricksWonThisRound: 2,
                                     totalTricksWon: 7,
                                     roundsWon: 0,
@@ -256,8 +256,8 @@ describe("WsTeam2V2GamePage", () => {
 
         await waitFor(() => {
             expect(screen.getAllByText("Round Winner").length).toBeGreaterThan(0);
+            expect(screen.getAllByText("Team A").length).toBeGreaterThan(0);
         });
-        expect(screen.getAllByText("Team A").length).toBeGreaterThan(0);
     });
 
     it("crowns the winning team from winnerTeamId on MATCH_COMPLETED (never computed)", async () => {

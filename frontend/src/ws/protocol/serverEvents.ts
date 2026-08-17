@@ -53,6 +53,11 @@ export interface BotPlayedPayload {
 export interface TurnChangedPayload {
     currentPlayerId: string;
     turnNumber: number;
+    /**
+     * P1's legal card ids at the moment of the turn change (empty when the
+     * game is not in a playable state). Mirrors the backend enrichment.
+     */
+    legalMoves?: string[];
 }
 
 export interface TrumpDeclaredPayload {

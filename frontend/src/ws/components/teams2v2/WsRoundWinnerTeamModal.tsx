@@ -29,7 +29,8 @@ export default function WsRoundWinnerTeamModal({
     );
     if (!roundWinnerTeam || !snapshot) return null;
 
-    const winnerName = `Team ${roundWinnerTeam.name}`;
+    const formatTeamName = (name: string) => name.startsWith("Team ") ? name : `Team ${name}`;
+    const winnerName = formatTeamName(roundWinnerTeam.name);
 
     const teamMembers = snapshot.players.reduce(
         (acc: Record<string, ViewPlayer[]>, player: ViewPlayer) => {
@@ -202,7 +203,7 @@ export default function WsRoundWinnerTeamModal({
                                         mb-5
                                     "
                                 >
-                                    Team {team.name}
+                                    {formatTeamName(team.name)}
                                 </div>
 
                                 {/* Avatar Group */}

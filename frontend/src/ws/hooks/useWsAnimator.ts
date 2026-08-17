@@ -102,6 +102,9 @@ export function useWsAnimator(config?: Partial<WsAnimConfig>): void {
         }
     }, [stateVersion, trickCount, clearTimers]);
 
+    const roundWinner = useSelector(selectRoundWinner);
+    const roundWinnerTeam = useSelector(selectRoundWinnerTeam);
+
     // Dealing: arm once on a false → true transition so a flood of card events
     // during the animation cannot keep extending it.
     useEffect(() => {
@@ -151,7 +154,6 @@ export function useWsAnimator(config?: Partial<WsAnimConfig>): void {
         }
     }, [trickWinnerTeam, cfg.trickModalMs, arm, dispatch]);
 
-    const roundWinner = useSelector(selectRoundWinner);
     useEffect(() => {
         if (roundWinner) {
             arm("round", cfg.roundModalMs, () =>
@@ -160,7 +162,6 @@ export function useWsAnimator(config?: Partial<WsAnimConfig>): void {
         }
     }, [roundWinner, cfg.roundModalMs, arm, dispatch]);
 
-    const roundWinnerTeam = useSelector(selectRoundWinnerTeam);
     useEffect(() => {
         if (roundWinnerTeam) {
             arm("roundTeam", cfg.roundModalMs, () =>

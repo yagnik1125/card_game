@@ -52,6 +52,19 @@ export const selectRoundWinnerTeam = (
 export const selectIsHumanTurn = (state: RootState): boolean =>
     selectWsGame(state).snapshot?.currentPlayerId === HUMAN_PLAYER_ID;
 
+/**
+ * Fresh P1 legal card ids delivered with TURN_CHANGED. Falls back to the
+ * snapshot's legal moves when no turn-change data is available, so the hand is
+ * never left with stale legality mid-trick.
+ */
+export const selectPlayableCardIds = (state: RootState): string[] => {
+    const ws = selectWsGame(state);
+    if (ws.legalMoves.length > 0) {
+        return ws.legalMoves;
+    }
+    return ws.snapshot?.legalMoves ?? [];
+};
+
 export const selectCanPlay = createSelector(
     [selectWsGame],
     (ws): boolean =>
@@ -75,3 +88,6 @@ export const selectStateVersion = (state: RootState): number =>
 
 export const selectWatching = (state: RootState): boolean =>
     selectWsGame(state).watching;
+
+export const selectTrickCollect = (state: RootState): string | null =>
+    selectWsGame(state).trickCollect;

@@ -52,6 +52,15 @@ export interface WsGameState {
     stateVersion: number;
     /** True when a second (non-human) client is watching the room. */
     watching: boolean;
+    /**
+     * P1's legal card ids, kept fresh by the TURN_CHANGED payload so the hand
+     * never relies on the snapshot's potentially stale legal moves mid-trick.
+     * Falls back to the snapshot's legal moves when no TURN_CHANGED data is
+     * available (e.g. snapshot-only flows).
+     */
+    legalMoves: string[];
+    /** Player ID whose trick is being collected (cards animate to them). */
+    trickCollect: string | null;
 }
 
 export type WsGameStatePatch = Partial<WsGameState>;
@@ -75,6 +84,8 @@ export const wsGameInitialState: WsGameState = {
     lastSignature: null,
     stateVersion: 0,
     watching: false,
+    legalMoves: [],
+    trickCollect: null,
 };
 
 type PayloadOf<T extends ServerEventName> = Extract<
@@ -130,6 +141,10 @@ function applySnapshot(
 ): void {
     if (isGameView(snapshot)) {
         patch.snapshot = snapshot;
+        // Keep the legal-moves state in lockstep with every snapshot so it
+        // never goes stale across trick/round boundaries (the snapshot's
+        // legal moves are always computed for the current state).
+        patch.legalMoves = snapshot.legalMoves ?? [];
     }
 }
 
@@ -208,16 +223,28 @@ export function reduceServerEvent(
                       currentPlayerId: typed.payload.currentPlayerId,
                   }
                 : state.snapshot;
+            const isHuman = typed.payload.currentPlayerId === HUMAN_PLAYER_ID;
+            const legalMoves = isHuman
+                ? (typed.payload.legalMoves && typed.payload.legalMoves.length > 0
+                      ? typed.payload.legalMoves
+                      : state.legalMoves)
+                : state.legalMoves;
             return withSignature(
-                { snapshot, turnNumber: typed.payload.turnNumber },
+                {
+                    snapshot,
+                    turnNumber: typed.payload.turnNumber,
+                    legalMoves,
+                },
                 signature
             );
         }
-        case "TRUMP_DECLARED":
-            return withSignature(
-                { trumpDeclaration: typed.payload.suit },
-                signature
-            );
+        case "TRUMP_DECLARED": {
+            const patch: WsGameStatePatch = { trumpDeclaration: typed.payload.suit };
+            if (state.snapshot) {
+                patch.snapshot = { ...state.snapshot, trumpSuit: typed.payload.suit };
+            }
+            return withSignature(patch, signature);
+        }
         case "TRICK_COMPLETED": {
             // Stale-terminal guard: after a resync the snapshot has already
             // advanced past this trick (same-round trick numbers only; the
@@ -263,15 +290,25 @@ export function reduceServerEvent(
             return withSignature(patch, signature);
         }
         case "ROUND_STARTED": {
-            const snapshot = state.snapshot
-                ? {
-                      ...state.snapshot,
-                      roundNumber: typed.payload.roundNumber,
-                      champion: typed.payload.championPlayerId,
-                      championTeam: typed.payload.championTeamId,
-                  }
-                : state.snapshot;
-            return withSignature({ dealing: true, snapshot }, signature);
+            const patch: WsGameStatePatch = {
+                dealing: true,
+                trickCards: [],
+                trickWinner: null,
+                trickWinnerTeam: null,
+            };
+            // The envelope carries the fresh round view (new hands dealt), so
+            // the hand and legal moves are correct immediately and the dealing
+            // animation animates the real cards instead of an empty hand.
+            applySnapshot(patch, envelope.snapshot);
+            if (!patch.snapshot && state.snapshot) {
+                patch.snapshot = {
+                    ...state.snapshot,
+                    roundNumber: typed.payload.roundNumber,
+                    champion: typed.payload.championPlayerId,
+                    championTeam: typed.payload.championTeamId,
+                };
+            }
+            return withSignature(patch, signature);
         }
         case "GAME_STATE": {
             if (!isGameView(envelope.snapshot)) {
@@ -281,8 +318,12 @@ export function reduceServerEvent(
                 {
                     snapshot: envelope.snapshot,
                     trickCards: viewToTrickCards(envelope.snapshot),
+                    legalMoves: envelope.snapshot.legalMoves ?? [],
                     animating: false,
-                    dealing: false,
+                    // First snapshot for this store instance (fresh join at
+                    // game/round start) triggers the dealing animation; a
+                    // mid-game resync must not re-deal.
+                    dealing: state.snapshot === null,
                     stateVersion: (state.stateVersion ?? 0) + 1,
                 },
                 signature

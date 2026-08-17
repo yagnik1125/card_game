@@ -32,7 +32,7 @@ const processEnv: Record<string, string | undefined> =
 function envMs(key: string, fallback: number): number {
     const raw = processEnv[key] ?? importMetaEnv[key];
     const parsed = Number(raw);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
 export const DEFAULT_WS_ANIM_CONFIG: WsAnimConfig = {

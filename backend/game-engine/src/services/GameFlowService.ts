@@ -52,6 +52,9 @@ export class GameFlowService {
                 roundsWon: team.roundsWon
             };
         }
+        state.currentTrick = TrickFactory.create(trick.trickNumber + 1);
+        state.turnState.currentPlayerId = winnerPlayer.id;
+        state.turnState.turnNumber = 1;
         EventBus.publish({
             gameId: session.gameId,
             event: {
@@ -66,12 +69,6 @@ export class GameFlowService {
                 trickWinnerTeam
             }
         });
-        if (winnerPlayer.hand.length === 0) {
-            return;
-        }
-        state.currentTrick = TrickFactory.create(trick.trickNumber + 1);
-        state.turnState.currentPlayerId = winnerPlayer.id;
-        state.turnState.turnNumber = 1;
     }
     private static processRound(session: GameSession): void {
         const players: Player[] = session.match.players;
