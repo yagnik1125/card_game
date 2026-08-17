@@ -14,7 +14,7 @@ import {
     viewToTrickCards,
     type TrickCard,
 } from "../dto/normalizers";
-import { isGameView, type GameView } from "../dto/gameView";
+import { isGameView, type GameView, type Suit } from "../dto/gameView";
 import type {
     RoundWinner,
     RoundWinnerTeam,
@@ -219,15 +219,15 @@ export function reduceServerEvent(
         case "TURN_CHANGED": {
             const snapshot = state.snapshot
                 ? {
-                      ...state.snapshot,
-                      currentPlayerId: typed.payload.currentPlayerId,
-                  }
+                    ...state.snapshot,
+                    currentPlayerId: typed.payload.currentPlayerId,
+                }
                 : state.snapshot;
             const isHuman = typed.payload.currentPlayerId === HUMAN_PLAYER_ID;
             const legalMoves = isHuman
                 ? (typed.payload.legalMoves && typed.payload.legalMoves.length > 0
-                      ? typed.payload.legalMoves
-                      : state.legalMoves)
+                    ? typed.payload.legalMoves
+                    : state.legalMoves)
                 : state.legalMoves;
             return withSignature(
                 {
@@ -241,7 +241,7 @@ export function reduceServerEvent(
         case "TRUMP_DECLARED": {
             const patch: WsGameStatePatch = { trumpDeclaration: typed.payload.suit };
             if (state.snapshot) {
-                patch.snapshot = { ...state.snapshot, trumpSuit: typed.payload.suit };
+                patch.snapshot = { ...state.snapshot, trumpSuit: typed.payload.suit as Suit };
             }
             return withSignature(patch, signature);
         }
