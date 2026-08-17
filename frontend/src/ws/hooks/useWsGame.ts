@@ -27,13 +27,6 @@ import {
     clearError,
     resetWsGame,
     setConnection,
-    setAnimating,
-    setDealing,
-    setRoundWinner,
-    setRoundWinnerTeam,
-    setTrickWinner,
-    setTrickWinnerTeam,
-    setTrumpDeclaration,
     setTrickCollect,
 } from "@/store/slices/wsGameSlice";
 import { DEFAULT_WS_ANIM_CONFIG, type WsAnimConfig } from "../config";
@@ -139,7 +132,7 @@ export function createEnvelopeRouter(
     const processEnv: Record<string, string | undefined> =
         typeof globalThis !== "undefined"
             ? (globalThis as { process?: { env?: Record<string, string | undefined> } })
-                  .process?.env ?? {}
+                .process?.env ?? {}
             : {};
     const skipQueueWaits = Boolean(
         processEnv.VITEST ||
