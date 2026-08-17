@@ -147,7 +147,7 @@ export class BotScheduler {
         const trumpAfter = updated.gameState?.currentRound.state.trumpSuit ?? null;
         const roundAfter = updated.gameState?.currentRound.state.roundNumber ?? roundBefore;
         const trumpDeclared = !trumpBefore && trumpAfter !== null;
-        const roundCompleted = roundAfter > roundBefore || updated.gameState?.completed === true;
+        const roundCompleted = roundAfter > roundBefore || updated.gameState?.completed;
         const trickCompleted = updated.gameState?.currentTrick.plays.length === 0;
 
         let delay = this.delayMs();
