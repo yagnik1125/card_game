@@ -72,6 +72,37 @@ To run the backend, ensure you have **Node.js (>= 18)** installed on your machin
    PORT=5000
    ```
 
+## Deploying the REST API to Netlify
+
+The backend includes a Netlify Function adapter for the REST API. Deploy the
+`backend/` directory as the Netlify site base directory. Netlify will use
+`netlify.toml`, build the function from `netlify/functions/api.ts`, and rewrite
+`/api/*` requests to it. The health check is available at `/health` after
+deployment.
+
+Configure these environment variables in the Netlify site settings:
+
+```env
+CORS_ORIGINS=https://your-frontend.example
+```
+
+The game store is in memory, so function instances do not share game state and
+state should not be expected to survive instance recycling. Netlify Functions
+also do not support the persistent Socket.IO/WebSocket connection used by the
+multiplayer frontend. Host the Socket.IO server (`npm run start`) on a
+long-running Node host and set the frontend's `VITE_WS_URL` to that host. Use
+the Netlify function URL (or its `/api` rewrite) for `VITE_API_URL` when using
+the REST API.
+
+For a Netlify deployment, use:
+
+```text
+Base directory: backend
+Build command: npm run build
+Publish directory: public
+Functions directory: netlify/functions
+```
+
 ## Available Scripts
 
 Using `package.json` configurations, run the operations via `npm run <command>`.

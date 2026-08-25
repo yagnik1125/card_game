@@ -19,7 +19,8 @@
 
   "include": [
     "src/**/*",
-    "game-engine/src/**/*"
+    "game-engine/src/**/*",
+    "netlify/functions/**/*"
   ],
 
   "exclude": [

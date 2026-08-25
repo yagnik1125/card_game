@@ -13,5 +13,3 @@ frontend/dist
 frontend/.env
 frontend/.vscode
 .vscode
-GAME_PLAN_WEBSOCKET.md
-FE_PLAN_WEBSOCKET.md
